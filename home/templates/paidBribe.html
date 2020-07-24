@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include "header.html" %}
+    <style>
+        body{
+            overflow-x: hidden;
+        }
+        aside{
+            display: inline-block;
+            float:left;
+        }
+        .card{
+            padding: 0.5em;
+            overflow: auto;
+        }
+        .mycard{
+            padding: 0;
+            margin: 0.5em 0;
+        }
+        .mycontainer{
+            height: auto;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .card a{
+            color: #212529;
+        }
+        .card ul li{
+            list-style-type: none;
+        }
+        .card a:hover{
+            color: blue;
+        }
+        .card a:link {
+            text-decoration: none;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+
+        var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            title: {
+                text: "Cases Representaion"
+            },
+            data: [{
+                type: "pie",
+                startAngle: 240,
+                yValueFormatString: "##0",
+                indexLabel: "{label} {y}",
+                dataPoints: [
+                    {y: {{ accepted_cases }}, label: "Accepted Cases:"},
+                    {y: {{ inprocess_cases }}, label: "Cases in Process:"},
+                    {y: {{ pending_cases }}, label: "Pending/New Cases:"},
+                ]
+            }]
+        });
+        chart.render();
+        
+        }
+    </script> 
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>   
+<body>
+    {% include "navbar.html" %}
+        <aside>
+            <div class="card">            
+                <strong>User:</strong> {{user}}
+                <strong>Total Number of Cases:</strong> {{total_cases}}
+                <strong>Pending Cases:</strong> {{pending_cases}}
+                <strong>In Process Cases:</strong> {{inprocess_cases}}
+                <strong>Accepted Cases:</strong> {{accepted_cases}}
+            </div>
+        </aside>
+        <div class="row justify-content-around">
+            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+        </div>
+        <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        <div class="card-header">
+                            Cases Accepted
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for i,j,e in accepted %}
+                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                <span class="text-muted">{{e}}</span></li></a>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        <div class="card-header">
+                            Cases In Process
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for i,j,e in inprocess %}
+                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                <span class="text-muted">{{e}}</span></li></a>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        <div class="card-header">
+                            New/Pending Cases
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for i,j,e in pending %}
+                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                <span class="text-muted">{{e}}</span></li></a>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% include "footer.html" %}
+    <script>
+        $(document).ready(function(e) {
+            window.addEventListener( "pageshow", function ( event ) {
+            var historyTraversal = event.persisted || 
+                                    ( typeof window.performance != "undefined" && 
+                                        window.performance.navigation.type === 2 );
+            if ( historyTraversal ) {
+                // Handle page restore.
+                window.location.reload();
+            }
+            });
+        });
+    </script>
+</body>
+</html>
+

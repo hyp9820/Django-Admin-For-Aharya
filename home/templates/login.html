@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+{%if message%}
+    <script>
+        alert('{{message}}');
+    </script>
+{%endif%}
+<html lang="en">
+{% include "header.html" %}
+
+<body>
+    {% load static %}
+    <link rel="stylesheet" href="{% static "css\login.css" %}">
+
+
+    {% load static%}
+    <link rel="stylesheet" href="{% static "css/Landing-Layout.css" %}" >
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+
+    <a class="navbar-brand" href="{% url 'login'%}">
+        <img src="{% static "images/bprd.png" %}" width="400" height="50" alt="" loading="lazy">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    </nav>
+    <div class="row">
+        <div class="col-md-10 m-auto">
+            <div class="card">
+                <div class="card-header">
+                    Login
+                </div>
+                <div class="card-body">
+                    <form action='/' method='post'>
+                        {%csrf_token%}
+                        <div class="form-group">
+                            <h5 class="card-title" for="exampleInputEmail1">Email</h5>
+                            <input type="email" name='email' class="form-control" id="email" aria-describedby="email">
+                        </div>
+                        <div class="form-group">
+                            <h5 class="card-title" for="PASSWORD">Password</h5>
+                            <div class="input-group" id="show_hide_password">
+                                <input class="form-control" type="password" name='pass'>
+                                <div class="input-group-addon" style="padding:5px 3px 0px 3px;">
+                                    <a><i class="fa fa-eye-slash" aria-hidden="true"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                            $(document).ready(function() {
+                                $("#show_hide_password a").on('click', function(event) {
+                                    event.preventDefault();
+                                    if($('#show_hide_password input').attr("type") == "text"){
+                                        $('#show_hide_password input').attr('type', 'password');
+                                        $('#show_hide_password i').addClass( "fa-eye-slash" );
+                                        $('#show_hide_password i').removeClass( "fa-eye" );
+                                    }else if($('#show_hide_password input').attr("type") == "password"){
+                                        $('#show_hide_password input').attr('type', 'text');
+                                        $('#show_hide_password i').removeClass( "fa-eye-slash" );
+                                        $('#show_hide_password i').addClass( "fa-eye" );
+                                    }
+                                });
+                            });
+                        </script>
+                        <div>
+                            <a href="">Forgot Password</a>                        
+                        </div>
+                        <br>
+                        <button type="submit" class="btn btn-primary active" value='login'>Login</button>
+                        <a class="btn btn-secondary active" href="{% url 'register'%}">Register</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include "footer.html" %}
+</body>
+
+</html>

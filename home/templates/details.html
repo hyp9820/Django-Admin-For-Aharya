@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+{% load getkey %}
+<html lang="en">
+    {% include "header.html" %}
+    <style>
+        aside{
+            display: inline-block;
+            float:left;
+        }
+        .card{
+            padding: 0.5em;
+            overflow: auto;
+        }
+        .mycard{
+            padding: 0 0.5em;
+            margin: 0.5em 0;
+        }
+        .card-header{
+            padding: 0.2em 0.5em;   
+        }
+        .mycontainer{
+            height: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .card a{
+            color: #212529;
+        }
+        .card ul li{
+            list-style-type: none;
+        }
+        .card a:hover{
+            color: blue;
+        }
+        .card a:link {
+            text-decoration: none;
+        }
+    </style>
+{% comment %} 
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-firestore.js"></script>
+    <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
+        authDomain: "bribe-block.firebaseapp.com",
+        databaseURL: "https://bribe-block.firebaseio.com",
+        projectId: "bribe-block",
+        storageBucket: "bribe-block.appspot.com",
+        messagingSenderId: "883197621162",
+        appId: "1:883197621162:web:e1cb0f7c7735f6e84eb1d3",
+        measurementId: "G-GXPSH1W25J"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    const db = firebase.firestore();
+
+    db.collection("FIR_NCR").get().then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+            // doc.data() is never undefined for query doc snapshots
+            db.collection("FIR_NCR").doc(doc.id).collection("all_data").get().then(function(subquerySnapshot) {
+                subquerySnapshot.forEach(function(subdoc) {
+                    console.log(subdoc.id, " => ", subdoc.data());
+                })
+            });
+            //console.log(doc.id, " => ", doc.data());
+        });
+    });
+
+
+    </script> {% endcomment %}
+<body>
+    {% include "navbar.html" %}
+        <aside>
+            <div class="card">             
+                <b>User:</b> {{user}}
+            </div>
+        </aside>
+        <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        Country Code: {{ data|getkey:"CountryCode" }}       
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">                       
+                        Country Name: {{ data|getkey:"CountryName" }}                      
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        Date of Filing: {{ data|getkey:"Date of Filing" }}                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Date of Incident: {{ data|getkey:"Date of Incident" }}       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Category: {{ data|getkey:"category" }}                                  
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Status: {{ data|getkey:"Status" }}                      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header text-light bg-dark">
+                            Details of Incident
+                        </div>
+                        {{ data|getkey:"Details of Incident" }}      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header text-light bg-dark">
+                            Details of Suspect
+                        </div>
+                        {{ data|getkey:"Details of Suspect" }}       
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Father/Husband Name: {{ data|getkey:"Father/Husband Name" }}       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        ID: {{ data|getkey:"id" }}       
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Name of User: {{ data|getkey:"Name of User" }}                      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        U.I.D. Number: {{ data|getkey:"U.I.D. Number" }}       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">                       
+                        U.I.D. Type: {{ data|getkey:"U.I.D. Type" }}                      
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Email: {{ data|getkey:"email" }}                                  
+                    </div>
+                </div>
+
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Contact: {{ data|getkey:"contact" }}                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-6">
+                    <div class="card mycard">
+                       Address Line 1: {{ data|getkey:"address1" }}       
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Address Line 2: {{ data|getkey:"address2" }}                      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        City: {{ data|getkey:"city" }}       
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">                       
+                        Pin code: {{ data|getkey:"pincode" }}                      
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        State: {{ data|getkey:"state" }}                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <button type="button" class="btn btn-danger" style="margin-right:5px">Guilty</button>
+                <button type="button" class="btn btn-success">Not Guilty</button>
+            </div>
+        </div>
+    {% include "footer.html" %}
+</body>
+</html>

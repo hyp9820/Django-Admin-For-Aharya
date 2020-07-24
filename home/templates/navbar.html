@@ -1,0 +1,41 @@
+{% load static%}
+<link rel="stylesheet" href="{% static "css/Landing-Layout.css" %}" >
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+
+  <a class="navbar-brand" href="{% url 'fir' user=user %}">
+    <img src="{% static "images/bprd.png" %}" width="400" height="50" alt="" loading="lazy">
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavDropdown">
+    <ul class="navbar-nav ml-auto navbar-links">
+      <li class="nav-item dropdown {{ bribe_active }}">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Bribe Report
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="{% url 'paidbribe' user=user %}">Paid Bribe</a>
+          {% comment %} <a class="dropdown-item" href="{% url 'fighter' user=user %}">Bribe Fighter</a> {% endcomment %}
+          {% comment %} <div class="dropdown-divider"></div> {% endcomment %}
+          <a class="dropdown-item" href="{% url 'unusual' user=user %}">Unusual Behaviour</a>
+        </div>
+      </li>
+      <li class="nav-item {{ fir_active }}">
+        <a class="nav-link" href="{% url 'fir' user=user %}">FIR</a>
+      </li>
+      <li class="nav-item {{ ncr_active }}">
+        <a class="nav-link" href="{% url 'ncr' user=user %}">NCR</a>
+      </li>
+      <li class="nav-item {{ noc_active }}">
+        <a class="nav-link" href="{% url 'noc' user=user %}">NOC</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+      </li>
+
+    </ul>
+  </div>
+</nav>

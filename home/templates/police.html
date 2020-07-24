@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <link rel="stylesheet" href="{% static "css\police.css" %}">
+    <script src="{% static 'js\police.js' %}"></script>
+    <title>POLICE</title>
+</head>
+    {% include "header.html" %}
+<body>
+  {% include "navbar.html" %}
+  <div id="map"></div>
+    <div id="right-panel">
+      <h2>Results</h2>
+      <ul id="places"></ul>
+      <button id="more">More results</button>
+    </div>
+  </div>
+<!-- Replace the value of the key parameter with your own API key. -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqW2n3bBV5BcYBnGhfk8W7vB4NM_EzT-Y&libraries=places&callback=initMap" async defer></script>
+  {% include "footer.html" %}
+</body>
+</html>

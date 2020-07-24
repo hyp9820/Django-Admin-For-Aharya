@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+{% load getkey %}
+<html lang="en">
+    {% include "header.html" %}
+    <style>
+        aside{
+            display: inline-block;
+            float:left;
+        }
+        .card{
+            padding: 0.5em;
+            overflow: auto;
+        }
+        .mycard{
+            padding: 0 0.5em;
+            margin: 0.5em 0;
+        }
+        .card-header{
+            padding: 0.2em 0.5em;   
+        }
+        .mycontainer{
+            height: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .card a{
+            color: #212529;
+        }
+        .card ul li{
+            list-style-type: none;
+        }
+        .card a:hover{
+            color: blue;
+        }
+        .card a:link {
+            text-decoration: none;
+        }
+    </style>
+<body>
+    {% include "navbar.html" %}
+        <aside>
+            <div class="card">             
+                <b>User:</b> {{user}}
+            </div>
+        </aside>
+        <div class="mycontainer">
+            <div class="row justify-content-around">
+                <ul>
+                    {% for key, value in data.items %} 
+                        <li>{{key}} - {{value}}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% include "footer.html" %}
+</body>
+</html>

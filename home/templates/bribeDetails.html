@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+{% load getkey %}
+<html lang="en">
+    {% include "header.html" %}
+    <style>
+        aside{
+            display: inline-block;
+            float:left;
+        }
+        .card{
+            padding: 0.5em;
+            overflow: auto;
+        }
+        .mycard{
+            padding: 0 0.5em;
+            margin: 0.5em 0;
+        }
+        .card-header{
+            padding: 0.2em 0.5em;   
+        }
+        .mycontainer{
+            height: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .card a{
+            color: #212529;
+        }
+        .card ul li{
+            list-style-type: none;
+        }
+        .card a:hover{
+            color: blue;
+        }
+        .card a:link {
+            text-decoration: none;
+        }
+    </style>
+{% comment %} 
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-firestore.js"></script>
+    <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
+        authDomain: "bribe-block.firebaseapp.com",
+        databaseURL: "https://bribe-block.firebaseio.com",
+        projectId: "bribe-block",
+        storageBucket: "bribe-block.appspot.com",
+        messagingSenderId: "883197621162",
+        appId: "1:883197621162:web:e1cb0f7c7735f6e84eb1d3",
+        measurementId: "G-GXPSH1W25J"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    const db = firebase.firestore();
+
+    db.collection("FIR_NCR").get().then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+            // doc.data() is never undefined for query doc snapshots
+            db.collection("FIR_NCR").doc(doc.id).collection("all_data").get().then(function(subquerySnapshot) {
+                subquerySnapshot.forEach(function(subdoc) {
+                    console.log(subdoc.id, " => ", subdoc.data());
+                })
+            });
+            //console.log(doc.id, " => ", doc.data());
+        });
+    });
+
+
+    </script> {% endcomment %}
+<body>
+    {% include "navbar.html" %}
+        <aside>
+            <div class="card">             
+                <b>User:</b> {{user}}
+            </div>
+        </aside>
+        <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        Country Code: <b>{{ data|getkey:"CountryCode" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">                       
+                        Country Name: <b>{{ data|getkey:"CountryName" }}</b>                      
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        Date of Filing: <b>{{ data|getkey:"Date of Filing" }}</b>                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Date of Incident: <b>{{ data|getkey:"date" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Category: <b>{{ data|getkey:"category" }}</b>                                  
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Status: <b>{{ data|getkey:"Status" }}</b>                      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header text-light bg-dark">
+                            Details of Incident
+                        </div>
+                        <b>{{ data|getkey:"details" }}</b>      
+                    </div>
+                </div>
+            </div>
+            {% comment %} <div class="row justify-content-around">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header text-light bg-dark">
+                            Details of Suspect
+                        </div>
+                        {{ data|getkey:"Details of Suspect" }}       
+                    </div>
+                </div>
+            </div> {% endcomment %}
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        ID: <b>{{ data|getkey:"id" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Email: <b>{{ data|getkey:"email" }}</b>                                  
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Amount: <b>{{ data|getkey:"amount" }}</b>                      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        City: <b>{{ data|getkey:"city" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">                       
+                        Pin code: <b>{{ data|getkey:"pincode" }}</b>                      
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        State: <b>{{ data|getkey:"state" }}</b>                                 
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                       Contact: <b>{{ data|getkey:"contact" }}</b>                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-6">
+                    <div class="card mycard">
+                       Address Line 1: <b>{{ data|getkey:"address1" }}</b>  
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Address Line 2: <b>{{ data|getkey:"address2" }}</b>           
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <form action="{% url "details" category=metadata|getkey:"category" user=metadata|getkey:"user" uid=metadata|getkey:"uid" case_id=metadata|getkey:"case_id" %}" method="GET">
+                    <button type="submit" name="accept" class="btn btn-success" style="margin-right:5px" value="accpt">Accept</button>
+                    <button type="submit" name="delete" class="btn btn-danger" value="del">Decline</button>
+                </form>
+            </div>
+        </div>
+    {% include "footer.html" %}
+</body>
+</html>
