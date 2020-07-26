@@ -3,6 +3,9 @@
 <html lang="en">
     {% include "header.html" %}
     <style>
+        body{
+            overflow-x: hidden;
+        }
         aside{
             display: inline-block;
             float:left;
@@ -45,13 +48,78 @@
         </aside>
         <div class="mycontainer">
             <div class="row justify-content-around">
-                <ul>
+                {% comment %} <ul>
                     {% for key, value in data.items %} 
                         <li>{{key}} - {{value}}</li>
                     {% endfor %}
-                </ul>
+                </ul> {% endcomment %}
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                       Purpose: <b>{{ data|getkey:"purpose" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">                       
+                        Id: <b>{{ data|getkey:"id" }}</b>                      
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mycard">
+                        Status: <b>{{ data|getkey:"Status" }}</b>                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header text-light bg-dark">
+                            Description
+                        </div>
+                        <b>{{ data|getkey:"description" }}</b>      
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Name: <b>{{ data|getkey:"name" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">                       
+                        Email: <b>{{ data|getkey:"email" }}</b>                      
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Phone No: <b>{{ data|getkey:"phone" }}</b>                                 
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card mycard">
+                        Pin Code: <b>{{ data|getkey:"pincode" }}</b>                                  
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-6">
+                    <div class="card mycard">
+                        Address Line 1: <b>{{ data|getkey:"address1" }}</b>       
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">                       
+                        Address Line 2: <b>{{ data|getkey:"address2" }}</b>                      
+                    </div>
+                </div>
             </div>
         </div>
+        <div class="row justify-content-center">
+                <form action="{% url "details" category=metadata|getkey:"category" user=metadata|getkey:"user" uid=metadata|getkey:"uid" case_id=metadata|getkey:"case_id" %}" method="GET">
+                    <button type="submit" name="accept" class="btn btn-success" style="margin-right:5px" value="accpt">Accept</button>
+                    <button type="submit" name="delete" class="btn btn-danger" value="del">Decline</button>
+                </form>
+            </div>
     {% include "footer.html" %}
 </body>
 </html>

@@ -83,7 +83,7 @@ def register(request):
   
 def logout(request):
     if request.session.has_key('username'):
-        firebase.auth().signOut()
+        # firebase.auth().signOut()
         request.session.flush()
     else:
         pass
@@ -134,6 +134,9 @@ def details(request, category, user, uid, case_id):
                 u'Status': u'Accepted'
             }, merge=True)
             return redirect(paidBribe, user=user)
+        if request.GET.get('evid')=='evidence':
+            # Show Evidence
+            return redirect(police)
 
         print("***************",category,"**************")
         doc_ref = db.collection(category).document(uid).collection(u'all_data').document(case_id)

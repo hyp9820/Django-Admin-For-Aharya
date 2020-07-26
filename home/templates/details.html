@@ -3,6 +3,9 @@
 <html lang="en">
     {% include "header.html" %}
     <style>
+        body{
+            overflow-x: hidden;
+        }
         aside{
             display: inline-block;
             float:left;
@@ -84,12 +87,12 @@
             <div class="row justify-content-around">
                 <div class="col-lg-4">
                     <div class="card mycard">
-                        Country Code: {{ data|getkey:"CountryCode" }}       
+                       Category: {{ data|getkey:"category" }}                                  
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="card mycard">                       
-                        Country Name: {{ data|getkey:"CountryName" }}                      
+                    <div class="card mycard">
+                        Date of Incident: {{ data|getkey:"Date of Incident" }}       
                     </div>
                 </div>
                 <div class="col-lg-4">
@@ -99,17 +102,7 @@
                 </div>
             </div>
             <div class="row justify-content-around">
-                <div class="col-lg-3">
-                    <div class="card mycard">
-                        Date of Incident: {{ data|getkey:"Date of Incident" }}       
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="card mycard">
-                       Category: {{ data|getkey:"category" }}                                  
-                    </div>
-                </div>
-                <div class="col-lg-6">
+                <div class="col-lg">
                     <div class="card mycard">                       
                         Status: {{ data|getkey:"Status" }}                      
                     </div>
@@ -205,8 +198,10 @@
                 </div>
             </div>
             <div class="row justify-content-center">
-                <button type="button" class="btn btn-danger" style="margin-right:5px">Guilty</button>
-                <button type="button" class="btn btn-success">Not Guilty</button>
+                <form action="{% url "details" category=metadata|getkey:"category" user=metadata|getkey:"user" uid=metadata|getkey:"uid" case_id=metadata|getkey:"case_id" %}" method="GET">
+                    <button type="submit" name="accept" class="btn btn-success" style="margin-right:5px" value="accpt">Accept</button>
+                    <button type="submit" name="delete" class="btn btn-danger" value="del">Decline</button>
+                </form>
             </div>
         </div>
     {% include "footer.html" %}
