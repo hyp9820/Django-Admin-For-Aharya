@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from home import templates
 import pyrebase
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import credentials, firestore, auth, threading
 
 config={
     'apiKey': "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
@@ -217,6 +217,25 @@ def paidBribe(request, user):
     total_cases = (len(list1)+len(list2)+len(list3))
 
     return render(request, "paidBribe.html", {"user":request.session['username'], "pending_cases":pending_cases, "inprocess_cases":inprocess_cases, "accepted_cases":accepted_cases, "total_cases":total_cases, "category":"PaidBribe", "bribe_active": "active", "pending":list1, "inprocess":list2, "accepted":list3})
+
+def hotReport(request, user):
+
+    if not request.session.has_key('username'):
+        return redirect(login)
+    if request.session['username'] != user:
+        return redirect(login)
+
+    docs = db.collection(u'Hot Report').stream()
+    lst = []
+    for doc in docs:
+
+        email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
+        reports = db.collection(u'Hot Report').document(u'{}'.format(doc.id)).collection(u'all_data').get()
+        for report in reports:
+            lst.append((report.id,doc.id, email, report.to_dict()))
+            print(report.to_dict())
+
+    return render(request, "hotReport.html",  {"user":request.session['username'], "category":"hot", "hot_active": "active", "data":lst})
     
 def unusualBehaviour(request, user):
     return render(request, "unusualBehaviour.html", {"user":request.session['username'], "bribe_active": "active"})

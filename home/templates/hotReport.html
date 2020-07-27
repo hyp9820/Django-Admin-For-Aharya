@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+{% load getkey %}
+<html lang="en">
+{% include "header.html" %}
+    <style>
+        body{
+            overflow-x: hidden;
+        }
+        aside{
+            display: inline-block;
+            float:left;
+        }
+        .card{
+            padding: 0.5em;
+            overflow: auto;
+        }
+        .mycard{
+            padding: 0;
+            margin: 0.5em 0;
+        }
+        .mycontainer{
+            height: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .card a{
+            color: #212529;
+        }
+        .card ul li{
+            list-style-type: none;
+        }
+        .card a:hover{
+            color: blue;
+        }
+        .card a:link {
+            text-decoration: none;
+        }
+        span .left{
+            float:right;
+        }
+    </style>
+    {% comment %} <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-firestore.js"></script>
+    <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
+        authDomain: "bribe-block.firebaseapp.com",
+        databaseURL: "https://bribe-block.firebaseio.com",
+        projectId: "bribe-block",
+        storageBucket: "bribe-block.appspot.com",
+        messagingSenderId: "883197621162",
+        appId: "1:883197621162:web:e1cb0f7c7735f6e84eb1d3",
+        measurementId: "G-GXPSH1W25J"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    const db = firebase.firestore();
+
+    db.collection("Hot Report")
+    .onSnapshot(function(querySnapshot) {
+        var addr,uid,url;
+        querySnapshot.forEach(function(doc) {
+            db.collection("Hot Report").doc(doc.id).collection("all_data").get().then(function (subQuerySnapshot) {
+                subQuerySnapshot.forEach(function(subdoc) {
+                    //location.reload()
+                    console.log(subdoc.id, "=>" , subdoc.data().Address)
+                });
+            });
+        });
+    });
+    </script> {% endcomment %}
+<body>
+    {% include "navbar.html" %}
+        <aside>
+            <div class="card">            
+                <strong>User:</strong> {{user}}
+            </div>
+        </aside>
+        <div class="mycontainer">
+            <div class="row justify-content-start">
+                <div class="col-lg">
+                    <div class="card mycard">
+                        <div class="card-header">
+                            Hot Reports
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for i,j,e,d in data %}
+                                <li class="list-group-item">
+                                <div class="row">
+                                    <div class="col-lg"><b>Case ID: </b>{{i}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 text-muted"><b>User ID: </b>{{d|getkey:'Uid'}}</div>
+                                    <div class="col-lg-6 text-muted"><b>Email: </b>{{e}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 text-muted"><b>Start Time: </b>{{d|getkey:"End Stamp"}}</div>
+                                    <div class="col-lg-6 text-muted"><b>End Time: </b>{{d|getkey:"Start Stamp"}}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg text-muted"><b>Address: </b>{{d|getkey:"Address"}}</div>
+                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="window.location.href = `{{d|getkey:'Url'}}`;">View Evidence</button>
+                                </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% include "footer.html" %}
+</body>
+</html>
