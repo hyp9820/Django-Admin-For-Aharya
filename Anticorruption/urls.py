@@ -39,5 +39,6 @@ urlpatterns = [
     path('details/<category>/<user>/<uid>/<case_id>/', views.details, name='details'),
     path('logout',views.logout, name='logout'), 
     path('police', views.police, name='police'),
-
+    path('faceevidence/<doc_id>/<rep_id>/',views.faceevidence,name='faceevidence'),
+    
 ]

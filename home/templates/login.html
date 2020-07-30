@@ -1,4 +1,82 @@
 <!DOCTYPE html>
+{% load static %}
+<link rel="stylesheet" href="{% static 'styles/login.css' %}">
+{%if message%}
+    <script>
+        alert('{{message}}');
+    </script>
+{%endif%}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/a81368914c.js"></script>
+    <title>Aharya Login</title>
+</head>
+{% comment %} {% include "header.html" %} {% endcomment %}
+<body>
+    <div class="card">
+        <div class="first">
+            <img class="img" src="http://ipfs.io/ipfs/Qme8KvWTgE6bvBGMzR6pGXYaWN1FpMRgaw66FrNyp2mMzB" alt="Image not available">
+            <h3>Welcome! Don't have an account?</h3>
+            <a href="{% url 'register'%}"><input type="submit" class="btn sign" value="Sign Up"></a>
+            {% comment %} <button class="btn sign" o>Sign Up</button> {% endcomment %}
+        </div>
+        <div class="second">
+            <form action='/' method='post'>
+                {%csrf_token%}
+				<img src="{% static 'images/avatar.svg' %}">
+				<h2 class="title">Login to your account</h2>
+           		<div class="input-div one">
+           		   <div class="i">
+           		   		<i class="fas fa-user"></i>
+           		   </div>
+           		   <div class="div">
+           		   		<h5>Email</h5>
+                        <input type="email" name='email' class="input" id="email" aria-describedby="email">
+           		   		{% comment %} <input type="text" class="input"> {% endcomment %}
+           		   </div>
+           		</div>
+           		<div class="input-div pass">
+           		   <div class="i"> 
+           		    	<i class="fas fa-lock"></i>
+           		   </div>
+           		   <div class="div" id="show_hide_password">
+           		    	<h5>Password</h5>
+                        {% comment %} <div class="input-group" id="show_hide_password"> {% endcomment %}
+                        <input class="input" type="password" name='pass'>
+                                {% comment %} <div class="input-group-addon" style="display: inline">
+                                    <a><i class="fa fa-eye-slash" aria-hidden="true"></i></a>
+                                </div> {% endcomment %}
+                        {% comment %} </div> {% endcomment %}
+           		    	{% comment %} <input type="password" class="input"> {% endcomment %}
+            	   </div>
+                    {% comment %} <script>
+                            $(document).ready(function() {
+                                $("#show_hide_password a").on('click', function(event) {
+                                    event.preventDefault();
+                                    if($('#show_hide_password input').attr("type") == "text"){
+                                        $('#show_hide_password input').attr('type', 'password');
+                                        $('#show_hide_password i').addClass( "fa-eye-slash" );
+                                        $('#show_hide_password i').removeClass( "fa-eye" );
+                                    }else if($('#show_hide_password input').attr("type") == "password"){
+                                        $('#show_hide_password input').attr('type', 'text');
+                                        $('#show_hide_password i').removeClass( "fa-eye-slash" );
+                                        $('#show_hide_password i').addClass( "fa-eye" );
+                                    }
+                                });
+                            });
+                    </script> {% endcomment %}
+            	</div>
+            	<a href="#">Forgot Password?</a>
+            	<input type="submit" class="btn" value="Login">
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript" src="{% static 'scripts/login.js' %}"></script>
+</body>
+</html>
+{% comment %} <!DOCTYPE html>
 {%if message%}
     <script>
         alert('{{message}}');
@@ -8,12 +86,11 @@
 {% include "header.html" %}
 
 <body>
-    {% load static %}
-    <link rel="stylesheet" href="{% static "css\login.css" %}">
+   
 
 
     {% load static%}
-    <link rel="stylesheet" href="{% static "css/Landing-Layout.css" %}" >
+    <link rel="stylesheet" href="{% static "styles/login.css" %}" >
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
@@ -76,4 +153,4 @@
     {% include "footer.html" %}
 </body>
 
-</html>
+</html> {% endcomment %}

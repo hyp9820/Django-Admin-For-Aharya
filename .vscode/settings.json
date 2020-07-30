@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\HYP\\anaconda3\\envs\\bribe\\python.exe"
+    "python.pythonPath": "C:\\Users\\HYP\\anaconda3\\envs\\bribe\\python.exe",
+    "python.linting.pylintArgs": ["--generate-members"]
 }

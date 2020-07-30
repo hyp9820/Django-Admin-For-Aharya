@@ -105,6 +105,9 @@
                                     <div class="col-lg text-muted"><b>Address: </b>{{d|getkey:"Address"}}</div>
                                 </div>
                                 <button class="btn btn-primary btn-sm" onclick="window.location.href = `{{d|getkey:'Url'}}`;">View Evidence</button>
+                                <form action="{% url 'faceevidence' doc_id=j rep_id=i %}" method="GET" style="display: inline;">
+                                    <button type="submit" name="evid" class="btn btn-info btn-sm" value="evidence">View Faces</button>
+                                </form>
                                 </span>
                                 </li>
                             {% endfor %}

@@ -3,6 +3,13 @@ from home import templates
 import pyrebase
 import firebase_admin
 from firebase_admin import credentials, firestore, auth, threading
+from django.core.mail import send_mail
+import cv2
+import os
+import face_recognition
+import urllib.request as req
+import time
+import datetime
 
 config={
     'apiKey': "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
@@ -134,10 +141,14 @@ def details(request, category, user, uid, case_id):
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'Accepted'
             }, merge=True)
+            # Sent Email
+            print("Sending Email")
+            send_mail('Report Accepted - {}'.format(case_id),
+            'Dear {},\nThis is to inform you that your bribe report with CaseID: {} has been accepted and necessary actions will be taken regarding it.\nThank you for the information.'.format(user, case_id),
+            'aharyaindia@gmail.com', ['{}'.format(request.GET.get('email'))], fail_silently = False)
             return redirect(paidBribe, user=user)
         if request.GET.get('evid')=='evidence':
-            # Show Evidence
-            return redirect(police)
+            face_recog()
 
         print("***************",category,"**************")
         doc_ref = db.collection(category).document(uid).collection(u'all_data').document(case_id)
@@ -164,6 +175,8 @@ def details(request, category, user, uid, case_id):
                 u'Status': u'Assessed'
             }, merge=True)
             return redirect(home, user=user)
+        if request.GET.get('evid')=='evidence':
+            face_recog()
 
         print("***************",category,"**************")
         doc_ref = db.collection(category).document(uid).collection(u'FIR').document(case_id)
@@ -267,27 +280,62 @@ def paidBribe(request, user):
     list3 = []
     total_cases = 0
     pending_cases = 0
+    states = []
+    dates = []
     for doc in docs:
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         pendingSubdocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
         for subdoc in pendingSubdocs:
+            states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            date = date.split('-')
+            # adjusting date acc to js Datetime (0-11 for Month)
+            date[1] = str(int(date[1]) - 1)
+            date = "-".join(date)
+            dates.append(date)
             list1.append((subdoc.id,doc.id, email))
 
         inProcessDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'In Process').get()
         for subdoc in inProcessDocs:
             list2.append((subdoc.id,doc.id, email))
+            states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            date = date.split('-')
+            # adjusting date acc to js Datetime (0-11 for Month)
+            date[1] = str(int(date[1]) - 1)
+            date = "-".join(date)
+            dates.append(date)
 
         acceptedDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
         for subdoc in acceptedDocs:
             list3.append((subdoc.id,doc.id, email))
+            states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            date = date.split('-')
+            # adjusting date acc to js Datetime (0-11 for Month)
+            date[1] = str(int(date[1]) - 1)
+            date = "-".join(date)
+            dates.append(date)
+
+    # creating dates dict with date : no of cases
+    for i in range(len(dates)):
+        # converting to DateTime for sorting
+        dates[i] = datetime.datetime.strptime(dates[i], '%Y-%m-%d').date()
+    dates.sort()
+    datesDic = {}
+    i = 0
+    for date in dates:
+        i += 1
+        datesDic[date] = i
+    for key in datesDic.keys():
+        print(key, datesDic[key])
 
     pending_cases = len(list1)
     inprocess_cases = len(list2)
     accepted_cases = len(list3)
     total_cases = (len(list1)+len(list2)+len(list3))
-
-    return render(request, "paidBribe.html", {"user":request.session['username'], "pending_cases":pending_cases, "inprocess_cases":inprocess_cases, "accepted_cases":accepted_cases, "total_cases":total_cases, "category":"PaidBribe", "bribe_active": "active", "pending":list1, "inprocess":list2, "accepted":list3})
-
+    return render(request, "paidBribe.html", {"user":request.session['username'], "pending_cases":pending_cases, "inprocess_cases":inprocess_cases, "accepted_cases":accepted_cases, "total_cases":total_cases, "category":"PaidBribe", "bribe_active": "active", "pending":list1, "inprocess":list2, "accepted":list3, "states": states, "dates":datesDic })
+    
 def hotReport(request, user):
 
     if not request.session.has_key('username'):
@@ -398,3 +446,140 @@ def ncr(request, user):
 
 def police(request):
     return render(request, "police.html")
+
+def faceevidence(request, doc_id, rep_id):
+    report = db.collection(u'Hot Report').document(u'{}'.format(doc_id)).collection(u'all_data').document(u'{}'.format(rep_id)).get().to_dict()['Url']
+    l=[report]
+    face_recog(l)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    UNKNOWN_FACES_DIR = str(BASE_DIR)+'\\home\\evidence'
+    for filename in os.listdir(UNKNOWN_FACES_DIR):
+        print('deleted')
+        os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')
+
+    return redirect(hotReport,user=request.session['username'])
+
+
+def face_recog(url=['http://ipfs.io/ipfs/QmcgBRywQf63rZdD27M9aVnSn1puwjchvqepAUE7zcKqCD']):
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    KNOWN_FACES_DIR = str(BASE_DIR)+'\\home\\known_faces'
+    FOUND_FACES_DIR = str(BASE_DIR)+'\\home\\found_faces'
+    print(KNOWN_FACES_DIR)
+    UNKNOWN_FACES_DIR = str(BASE_DIR)+'\\home\\evidence'
+    TOLERANCE = 0.6
+    FRAME_THICKNESS = 3
+    FONT_THICKNESS = 2
+    MODEL = 'hog'
+    if(len(url)>0):
+        for i in range(len(url)):
+            type_of_file=req.urlopen(url[i]).info()['content-type']
+            if(type_of_file=="video/mp4"):
+                req.urlretrieve(url[i],f'{UNKNOWN_FACES_DIR}\\sample{i}.mp4')
+            elif(type_of_file == "image/jpg"):
+                req.urlretrieve(url[i],f'{UNKNOWN_FACES_DIR}\\sample{i}.jpg')
+            elif(type_of_file == "image/jpeg"):
+                req.urlretrieve(url[i],f'{UNKNOWN_FACES_DIR}\\sample{i}.jpeg')
+            elif(type_of_file == "image/png"):
+                req.urlretrieve(url[i],f'{UNKNOWN_FACES_DIR}\\sample{i}.png')
+            print(url)
+            url=[]
+    else:
+        req.urlretrieve('http://ipfs.io/ipfs/QmcgBRywQf63rZdD27M9aVnSn1puwjchvqepAUE7zcKqCD',f'{UNKNOWN_FACES_DIR}\\sample2.mp4')
+    # video = cv2.VideoCapture(str(BASE_DIR)+"\home\evidence\modi.mp4")  # put the video file name instead
+    print("loading known faces")
+
+    known_faces = []
+    known_names = []
+
+    for name in os.listdir(f"{KNOWN_FACES_DIR}"):
+        for filename in os.listdir(f"{KNOWN_FACES_DIR}/{name}"):
+            print(filename)
+            image = face_recognition.load_image_file(f"{KNOWN_FACES_DIR}/{name}/{filename}")
+            encodings = face_recognition.face_encodings(image)
+            if(len(encodings)>0):
+                encoding=encodings[0]
+                known_faces.append(encoding)
+                known_names.append(name)
+    next_id = int(time.time())
+    print("processing unknown faces")
+    for filename in os.listdir(UNKNOWN_FACES_DIR):
+        if filename.endswith(('.png', '.jpg', '.jpeg')):
+            print(filename)
+            image = face_recognition.load_image_file(f"{UNKNOWN_FACES_DIR}/{filename}")
+            locations = face_recognition.face_locations(image, model=MODEL)
+            encodings = face_recognition.face_encodings(image, locations)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            for face_encoding, face_location in zip(encodings, locations):
+                results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
+                match = None
+                if True in results:
+                    match = known_names[results.index(True)]
+                    print(f"Match found: {match}")
+                else:
+                    match = str(next_id)
+                    next_id =int(time.time())
+                    known_names.append(match)
+                    known_faces.append(face_encoding)
+                    os.mkdir(f"{KNOWN_FACES_DIR}/{match}")
+                    os.mkdir(f"{FOUND_FACES_DIR}/{match}")
+                    cv2.imwrite(f"{FOUND_FACES_DIR}/{match}/{match}.jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                    cv2.imwrite(f"{KNOWN_FACES_DIR}/{match}/{match}.jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                top_left = (face_location[3], face_location[0])
+                bottom_right = (face_location[1], face_location[2])
+                color = [0, 255, 0]
+                cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICKNESS)
+
+                top_left = (face_location[3], face_location[2])
+                bottom_right = (face_location[1], face_location[2] + 22)
+                cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+                cv2.putText(image, f"{match}", (face_location[3] + 5, face_location[2] + 15), cv2.FONT_HERSHEY_COMPLEX, 0.5,
+                            (200, 200, 200), FONT_THICKNESS)
+                cv2.imshow(filename, image)
+                cv2.waitKey(0)
+                cv2.destroyWindow(filename)
+                print("file deleted")
+                # os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')
+        else:
+            video = cv2.VideoCapture(f"{UNKNOWN_FACES_DIR}/{filename}")
+            print(filename)
+            while True:
+                ret, img = video.read()
+                if(ret==False):
+                    break
+                image = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
+                cv2.imshow("", image)
+                locations = face_recognition.face_locations(image, model=MODEL)
+                encodings = face_recognition.face_encodings(image, locations)
+                for face_encoding, face_location in zip(encodings, locations):
+                    results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
+                    match = None
+                    if True in results:
+                        match = known_names[results.index(True)]
+                        print(f"Match found: {match}")
+                    else:
+                        match = str(next_id)
+                        next_id += 1
+                        known_names.append(match)
+                        known_faces.append(face_encoding)
+                        os.mkdir(f"{KNOWN_FACES_DIR}/{match}")
+                        os.mkdir(f"{FOUND_FACES_DIR}/{match}")
+                        cv2.imwrite(f"{FOUND_FACES_DIR}/{match}/{match}.jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                        cv2.imwrite(f"{KNOWN_FACES_DIR}/{match}/{match}.jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                    top_left = (face_location[3], face_location[0])
+                    bottom_right = (face_location[1], face_location[2])
+                    color = [0, 255, 0]
+                    cv2.rectangle(image, top_left, bottom_right, color, FRAME_THICKNESS)
+
+                    top_left = (face_location[3], face_location[2])
+                    bottom_right = (face_location[1], face_location[2] + 22)
+                    cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+                    cv2.putText(image, f"{match}", (face_location[3] + 5, face_location[2] + 15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (200, 200, 200), FONT_THICKNESS)
+
+                cv2.imshow("", image)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    print("file deleted")
+                    # os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')
+                    break
+            cv2.destroyWindow("")
+        # os.close(f'{UNKNOWN_FACES_DIR}\\{filename}')
+        # os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')

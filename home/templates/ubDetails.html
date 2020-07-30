@@ -144,8 +144,10 @@
             </div>
             <div class="row justify-content-center">
                 <form action="{% url "details" category=metadata|getkey:"category" user=metadata|getkey:"user" uid=metadata|getkey:"uid" case_id=metadata|getkey:"case_id" %}" method="GET">
+                    {% if data|getkey:"Status" != "Accepted" %}
                     <button type="submit" name="accept" class="btn btn-success" style="margin-right:5px" value="accpt">Accept</button>
-                    <button type="submit" name="delete" class="btn btn-danger" value="del">Decline</button>
+                    {% endif %}  
+                    <button type="submit" name="delete" class="btn btn-danger" value="del">Delete</button>
                     <button type="submit" name="evid" class="btn btn-info" value="evidence">View Evidence</button>
                 </form>
             </div>

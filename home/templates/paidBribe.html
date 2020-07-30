@@ -36,35 +36,14 @@
             text-decoration: none;
         }
     </style>
-    <script>
-        window.onload = function() {
-
-        var chart = new CanvasJS.Chart("chartContainer", {
-            animationEnabled: true,
-            title: {
-                text: "Cases Representaion"
-            },
-            data: [{
-                type: "pie",
-                startAngle: 240,
-                yValueFormatString: "##0",
-                indexLabel: "{label} {y}",
-                dataPoints: [
-                    {y: {{ accepted_cases }}, label: "Accepted Cases:"},
-                    {y: {{ inprocess_cases }}, label: "Cases in Process:"},
-                    {y: {{ pending_cases }}, label: "Pending/New Cases:"},
-                ]
-            }]
-        });
-        chart.render();
-        
-        }
-    </script> 
+    
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>   
 <body>
     {% include "navbar.html" %}
+
+
         <aside>
-            <div class="card">            
+            <div class="card" style="height: 100vh;">            
                 <strong>User:</strong> {{user}}
                 <strong>Total Number of Cases:</strong> {{total_cases}}
                 <strong>Pending Cases:</strong> {{pending_cases}}
@@ -72,10 +51,25 @@
                 <strong>Accepted Cases:</strong> {{accepted_cases}}
             </div>
         </aside>
-        <div class="row justify-content-around">
-            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-        </div>
         <div class="mycontainer">
+        <div class="row justify-content-around">
+            <div class="col-lg-4">
+                <div class="card mycard">
+                    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card mycard">
+                    <div id="chartContainerState" style="height: 300px; width: 100%;"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card mycard">
+                    <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>        
+                </div>
+            </div>
+
+        </div>
             <div class="row justify-content-around">
                 <div class="col-lg-4">
                     <div class="card mycard">
@@ -119,6 +113,8 @@
             </div>
         </div>
     {% include "footer.html" %}
+
+    
     <script>
         $(document).ready(function(e) {
             window.addEventListener( "pageshow", function ( event ) {
@@ -131,6 +127,105 @@
             }
             });
         });
+    </script>
+
+
+    <script>
+        function drawGraphPie() {
+            var chart = new CanvasJS.Chart("chartContainer", {
+                animationEnabled: true,
+                title: {
+                    text: "Status Categorized Reports"
+                },
+                data: [{
+                    type: "pie",
+                    startAngle: 240,
+                    yValueFormatString: "##0",
+                    indexLabel: "{label} {y}",
+                    dataPoints: [
+                        {y: {{ accepted_cases }}, label: "Accepted Cases:"},
+                        {y: {{ inprocess_cases }}, label: "Cases in Process:"},
+                        {y: {{ pending_cases }}, label: "Pending/New Cases:"},
+                    ]
+                }]
+            });
+            chart.render();
+        }
+    </script>
+    <script>
+        function drawGraphTime() {
+            var chart = new CanvasJS.Chart("chartContainerTime", {
+                animationEnabled: true,
+                zoomEnabled: true,
+                zoomType: "x",
+                title: {
+                    text: "TimeLine Of Report Arrival"
+                },
+                data: [{
+                    type: "spline",
+                    dataPoints: [
+                        {% for date, value in dates.items %}
+                            {x:new Date({{date|date:'Y,m,d'}}), y: {{ value }} },
+                        {% endfor %}
+                    ]
+                }]
+            });
+            chart.render();
+        }
+    </script> 
+    <script>
+        function drawGraphState() {
+            graphData = []
+            for (item in stateCount) {
+                // console.log(item)
+                graphData.push({y : stateCount[item], label:item});
+            }
+            console.log(graphData)
+            var chart = new CanvasJS.Chart("chartContainerState",
+            {
+            animationEnabled: true,
+            animationDuration: 2000,
+            title:{
+                text: "State Categorized Reports"
+            },
+            data: [
+
+            {
+                dataPoints: graphData
+            }
+            ]
+            });
+            chart.render();
+            setTimeout(drawGraphPie, 100);
+            setTimeout(drawGraphTime, 100);
+
+        }
+    </script>
+    <script>
+    states = "{{states|escapejs}}"
+    states = states.replace(/[^0-9,A-z]/g, '');
+    states = states.slice(1,states.length-1).split(",")
+    console.log(states)
+    stateCount = {}
+    for (i=0; i<states.length; i++) {
+        let name = states[i];
+        name = name.toLowerCase().trim();
+        let temp = name.split(" ");
+        name = ""
+        for (let i=0; i<temp.length; i++) {
+            if(i != 0) {
+                name += " ";
+            }
+            name += temp[i][0].toUpperCase() + temp[i].slice(1,temp[i].length);
+        }
+        if(stateCount.hasOwnProperty(name)) {
+            stateCount[name] += 1
+        }
+        else {
+            stateCount[name] = 1;
+        }
+    }    
+    drawGraphState();
     </script>
 </body>
 </html>
