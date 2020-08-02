@@ -76,7 +76,7 @@
 <body>
     {% include "navbar.html" %}
         <aside>
-            <div class="card">            
+            <div class="card userinfo">            
                 <strong>User:</strong> {{user}}
             </div>
         </aside>
@@ -91,7 +91,7 @@
                             {% for i,j,e,d in data %}
                                 <li class="list-group-item">
                                 <div class="row">
-                                    <div class="col-lg"><b>Case ID: </b>{{i}}</div>
+                                    <div class="col-lg"><b>Case ID: </b>{{d|getkey:'complaintID'}}</div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 text-muted"><b>User ID: </b>{{d|getkey:'Uid'}}</div>
@@ -101,12 +101,15 @@
                                     <div class="col-lg-6 text-muted"><b>Start Time: </b>{{d|getkey:"End Stamp"}}</div>
                                     <div class="col-lg-6 text-muted"><b>End Time: </b>{{d|getkey:"Start Stamp"}}</div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-lg text-muted"><b>Address: </b>{{d|getkey:"Address"}}</div>
-                                </div>
                                 <button class="btn btn-primary btn-sm" onclick="window.location.href = `{{d|getkey:'Url'}}`;">View Evidence</button>
                                 <form action="{% url 'faceevidence' doc_id=j rep_id=i %}" method="GET" style="display: inline;">
                                     <button type="submit" name="evid" class="btn btn-info btn-sm" value="evidence">View Faces</button>
+                                </form>
+                                <form action="{% url 'hotreport' user=user %}" method="GET" style="display: inline;">
+                                    <input name="subid" type="hidden" value="{{i}}">
+                                    <input name="uid" type="hidden" value="{{j}}">
+                                    <button type="submit" name="accept" class="btn btn-success btn-sm" value="accpt">Accept</button>
+                                    <button type="submit" name="delete" class="btn btn-danger btn-sm" value="del">Delete</button>
                                 </form>
                                 </span>
                                 </li>

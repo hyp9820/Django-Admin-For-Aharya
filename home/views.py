@@ -39,13 +39,17 @@ def login(request):
         email = request.POST.get('email')
         passw = request.POST.get('pass')
         try:
-            _ = authpy.sign_in_with_email_and_password(email,passw)
             user = auth.get_user_by_email(email)
-            request.session['username'] = user.email          
-            return redirect(paidBribe, user=user.email)
+            d = user.custom_claims
+            if d['admin'] == True:
+                _ = authpy.sign_in_with_email_and_password(email,passw)
+                request.session['username'] = user.email          
+                return redirect(paidBribe, user=user.email)
         except:
             message ="You have entered invalid credentials"
             return render(request,"login.html",{"message":message})
+        message ="You have entered invalid credentials"
+        return render(request,"login.html",{"message":message})
     else:
         return render(request, "login.html")
 
@@ -73,6 +77,8 @@ def register(request):
 
         if passw == conf_passw:
             auth.create_user(display_name=nm, email=email, password=passw, phone_number="+91"+phone)
+            user = auth.get_user_by_email(email)
+            auth.set_custom_user_claims(user.uid, {"admin":True})
             db = firestore.client()
             db.collection(u'admins').document(email).set({
                 'name':nm,
@@ -90,7 +96,6 @@ def register(request):
   
 def logout(request):
     if request.session.has_key('username'):
-        # firebase.auth().signOut()
         request.session.flush()
     else:
         pass
@@ -107,21 +112,47 @@ def home(request, user):
     list1 = []
     list2 = []
     list3 = []
+    states = []
+    dates = []
     for doc in docs:
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         penddingSubdocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').where(u'Status',u'==',u'Pending').get()
         for subdoc in penddingSubdocs:
             list1.append((subdoc.id,doc.id,email))
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
 
         inProgressDocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').where(u'Status',u'==',u'inProgress').get()
         for subdoc in inProgressDocs:
             list2.append((subdoc.id,doc.id,email))
-
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
+            
         assessedDocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').where(u'Status',u'==',u'Assessed').get()
         for subdoc in assessedDocs:
             list3.append((subdoc.id,doc.id,email))
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'FIR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
 
-    return render(request, "home.html", {"user":request.session['username'], "category":"FIR", "pending_id_list":list1, "progress_id_list":list2, "assessed_id_list":list3, "fir_active": "active", "assesedNo" : len(list3), "progressNo":len(list2), "newNo":len(list1) })
+
+    # creating dates dict with date : no of cases
+    for i in range(len(dates)):
+        # converting to DateTime for sorting
+        dates[i] = datetime.datetime.strptime(dates[i], '%Y-%m-%d').date()
+    dates.sort()
+    datesDic = {}
+    i = 0
+    for date in dates:
+        i += 1
+        # convertind date to string 'm-d-Y' format for
+        datesDic[date.strftime("%m-%d-%Y")] = i
+    for key in datesDic.keys():
+        print(key, datesDic[key])
+
+    return render(request, "home.html", {"user":request.session['username'], "category":"FIR", "pending_id_list":list1, "progress_id_list":list2, "assessed_id_list":list3, "fir_active": "active", "assesedNo" : len(list3), "progressNo":len(list2), "newNo":len(list1), "states": states, "dates":datesDic })
 
 def details(request, category, user, uid, case_id):
 
@@ -135,7 +166,12 @@ def details(request, category, user, uid, case_id):
     # Bride Report
     if category == "PaidBribe":
         if request.GET.get('delete')=='del':
-            db.collection(category).document(uid).collection(u'all_data').document(case_id).delete()
+            db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
+                u'Status': u'Denied'
+            }, merge=True)  
+            send_mail('Report Denied - {}'.format(case_id),
+            'Dear {},\nSorry to inform you that your bribe report with CaseID: {} has been denied. But your contribution was appreciated\nThank you for the information.'.format(user, case_id),
+            'aharyaindia@gmail.com', ['{}'.format(request.GET.get('email'))], fail_silently = False)
             return redirect(paidBribe, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
@@ -148,6 +184,16 @@ def details(request, category, user, uid, case_id):
             'aharyaindia@gmail.com', ['{}'.format(request.GET.get('email'))], fail_silently = False)
             return redirect(paidBribe, user=user)
         if request.GET.get('evid')=='evidence':
+            vlen = request.GET.get('vlen')
+            ilen = request.GET.get('ilen')
+            vids = []
+            imgs = []
+            for i in range(int(ilen)):
+                imgs.append(request.GET.get('i'+str(i+1)))
+            for v in range(int(vlen)):
+                vids.append(request.GET.get('i'+str(i+1)))
+            print(imgs)
+            print(vids)
             face_recog()
 
         print("***************",category,"**************")
@@ -157,18 +203,24 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
-        # print(data)
+        temp = db.collection('EvidenceLinks').document(data['id']).get().to_dict()
+        image_evidence = temp['EvidenceLinkImage']
+        video_evidence = temp['EvidenceLinkVideo']
+        image_evidence.pop()
+        video_evidence.pop()
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'In Process'
             }, merge=True)
-        return render(request, "bribeDetails.html", {"user":request.session['username'], "data":data, "metadata":metadata})
+        return render(request, "bribeDetails.html", {"user":request.session['username'], "data":data, "images":image_evidence, "videos":video_evidence, "metadata":metadata})
 
     # FIR
     if category == "FIR":
         category = "FIR_NCR"
         if request.GET.get('delete')=='del':
-            db.collection(category).document(uid).collection(u'FIR').document(case_id).delete()
+            db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
+                u'Status': u'Denied'
+            }, merge=True)  
             return redirect(home, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'FIR').document(case_id).set({
@@ -185,7 +237,6 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
-        # print(data)
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'FIR').document(case_id).set({
                 u'Status': u'inProgress'
@@ -196,7 +247,9 @@ def details(request, category, user, uid, case_id):
     if category == "NCR":
         category = "FIR_NCR"
         if request.GET.get('delete')=='del':
-            db.collection(category).document(uid).collection(u'NCR').document(case_id).delete()
+            db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
+                u'Status': u'Denied'
+            }, merge=True)  
             return redirect(home, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'NCR').document(case_id).set({
@@ -211,7 +264,6 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
-        # print(data)
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'NCR').document(case_id).set({
                 u'Status': u'inProgress'
@@ -221,7 +273,9 @@ def details(request, category, user, uid, case_id):
     # NOC
     if category == "NOC":
         if request.GET.get('delete')=='del':
-            db.collection(category).document(uid).collection(u'all_data').document(case_id).delete()
+            db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
+                u'Status': u'Denied'
+            }, merge=True)  
             return redirect(noc, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
@@ -235,7 +289,6 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
-        # print(data)
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'In Process'
@@ -245,7 +298,9 @@ def details(request, category, user, uid, case_id):
     # Unusual Behaviour
     if category == "UnusualBehaviour":
         if request.GET.get('delete')=='del':
-            db.collection(category).document(uid).collection(u'all_data').document(case_id).delete()
+            db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
+                u'Status': u'Denied'
+            }, merge=True)            
             return redirect(unusualBehaviour, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
@@ -260,7 +315,6 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
-        # print(data)
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'In Process'
@@ -274,6 +328,16 @@ def paidBribe(request, user):
     if request.session['username'] != user:
         return redirect(login)
 
+    if request.GET.get('refresh') == 'refresh':
+        if request.GET.get('classify') == 'cases':
+            #Jesdin DO CaseWise Display
+            print("CASE-WISE")
+            return redirect(paidBribe, user=user)
+        if request.GET.get('classify') == 'dept':
+            #Jesdin DO DeptWise Display
+            print("DEPT-WISE")
+            return redirect(paidBribe, user=user)
+
     docs = db.collection(u'PaidBribe').stream()
     list1 = []
     list2 = []
@@ -286,24 +350,16 @@ def paidBribe(request, user):
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         pendingSubdocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
         for subdoc in pendingSubdocs:
+            list1.append((subdoc.id,doc.id, email))
             states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
             date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
-            date = date.split('-')
-            # adjusting date acc to js Datetime (0-11 for Month)
-            date[1] = str(int(date[1]) - 1)
-            date = "-".join(date)
             dates.append(date)
-            list1.append((subdoc.id,doc.id, email))
 
         inProcessDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'In Process').get()
         for subdoc in inProcessDocs:
             list2.append((subdoc.id,doc.id, email))
             states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
             date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
-            date = date.split('-')
-            # adjusting date acc to js Datetime (0-11 for Month)
-            date[1] = str(int(date[1]) - 1)
-            date = "-".join(date)
             dates.append(date)
 
         acceptedDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
@@ -311,10 +367,6 @@ def paidBribe(request, user):
             list3.append((subdoc.id,doc.id, email))
             states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
             date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
-            date = date.split('-')
-            # adjusting date acc to js Datetime (0-11 for Month)
-            date[1] = str(int(date[1]) - 1)
-            date = "-".join(date)
             dates.append(date)
 
     # creating dates dict with date : no of cases
@@ -326,7 +378,8 @@ def paidBribe(request, user):
     i = 0
     for date in dates:
         i += 1
-        datesDic[date] = i
+        # convertind date to string 'm-d-Y' format for
+        datesDic[date.strftime("%m-%d-%Y")] = i
     for key in datesDic.keys():
         print(key, datesDic[key])
 
@@ -343,18 +396,71 @@ def hotReport(request, user):
     if request.session['username'] != user:
         return redirect(login)
 
+    if request.GET.get('delete')=='del':
+        db.collection(u'Hot Report').document(uid).collection(u'all_data').document(case_id).delete()
+        return redirect(hotReport, user=user)
+    if request.GET.get('accept')=='accpt':
+        uid = request.GET.get('uid')
+        case_id = request.GET.get('subid')
+        db.collection(u'Hot Report').document(uid).collection(u'all_data').document(case_id).set({
+            u'Status': u'Accepted'
+        }, merge=True)
+        return redirect(hotReport, user=user)
+
     docs = db.collection(u'Hot Report').stream()
     lst = []
     for doc in docs:
 
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         # print(email)
-        reports = db.collection(u'Hot Report').document(u'{}'.format(doc.id)).collection(u'all_data').get()
+        reports = db.collection(u'Hot Report').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
         for report in reports:
             lst.append((report.id,doc.id, email, report.to_dict()))
             print(report.to_dict())
 
     return render(request, "hotReport.html",  {"user":request.session['username'], "category":"hot", "hot_active": "active", "data":lst})
+
+def rti(request, user):
+    if not request.session.has_key('username'):
+        return redirect(login)
+    if request.session['username'] != user:
+        return redirect(login)
+
+    if request.method == 'POST':
+        case_id = request.POST.get('id')
+        rid = request.POST.get('rdocid')
+        uid = request.POST.get('udocid')
+        msg = request.POST.get('message')
+        email = request.POST.get('email')
+        send_mail('Delay in Actions Response - {}'.format(case_id),
+            'Respected {},\nThis is the response regarding your delay in action report having Case ID: {},\n{}\nThank you for your co-operation.\nPlease do not reply to this email.'.format(email, case_id,msg),
+            'aharyaindia@gmail.com', ['{}'.format(email)], fail_silently = False)
+        db.collection(u'Delay in Actions').document(uid).collection(u'all_data').document(rid).set({
+                u'Status': u'Responded'
+        }, merge=True)
+
+        return redirect(rti, user=user)
+
+    docs = db.collection(u'Delay in Actions').stream()
+    lst = []
+    for doc in docs:
+         reports = db.collection(u'Delay in Actions').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
+         for report in reports:
+            dic = report.to_dict()
+            if dic['ApplicationType'] == 'Bribe Report':
+                category = 'PaidBribe'
+            elif dic['ApplicationType'] == 'FIR Reporting':
+                category = 'FIR'
+            elif dic['ApplicationType'] == 'NOC':
+                category = 'NOC'
+            elif dic['ApplicationType'] == 'Hot Bribe Reporting':
+                category = 'Hot Report'
+            else:
+                category = 'Appointment'
+            
+            lst.append((report.id, doc.id, report.to_dict(), category))
+             
+    return render(request, "rti.html", {"user":request.session['username'], "rti_active":"active", "data":lst})
     
 def unusualBehaviour(request, user):
     if not request.session.has_key('username'):
@@ -400,22 +506,38 @@ def noc(request, user):
     list1 = []
     list2 = []
     list3 = []
+    # states = []
+    # dates = []
+
     for doc in docs:
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         pendingSubdocs = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
         for subdoc in pendingSubdocs:
             list1.append((subdoc.id,doc.id, email))
+            # states.append(db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            # date = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            # dates.append(date)
 
         inProcessDocs = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'In Process').get()
         for subdoc in inProcessDocs:
             list2.append((subdoc.id,doc.id, email))
+            # states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            # date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            # dates.append(date)
 
         acceptedDocs = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
         for subdoc in acceptedDocs:
             list3.append((subdoc.id,doc.id, email))
+            # states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
+            # date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
+            # dates.append(date)
 
-
-    return render(request, "noc.html", {"user":request.session['username'], "noc_active": "active", "category":"NOC", "pending":list1, "inprocess":list2, "accepted":list3})
+    pending_cases = len(list1)
+    inprocess_cases = len(list2)
+    accepted_cases = len(list3)
+    total_cases = (len(list1)+len(list2)+len(list3))
+    print("NOC")
+    return render(request, "noc.html", {"user":request.session['username'], "pending_cases":pending_cases, "inprocess_cases":inprocess_cases, "accepted_cases":accepted_cases, "total_cases":total_cases, "noc_active": "active", "category":"NOC", "pending":list1, "inprocess":list2, "accepted":list3})
 
 def ncr(request, user):
 
@@ -428,21 +550,47 @@ def ncr(request, user):
     list1 = []
     list2 = []
     list3 = []
+    states = []
+    dates = []
+
     for doc in docs:
         email = db.collection(u'users').document(u'{}'.format(doc.id)).get().to_dict()['email']
         penddingSubdocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').where(u'Status',u'==',u'Pending').get()
         for subdoc in penddingSubdocs:
             list1.append((subdoc.id,doc.id,email))
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
 
         inProgressDocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').where(u'Status',u'==',u'inProgress').get()
         for subdoc in inProgressDocs:
             list2.append((subdoc.id,doc.id,email))
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
 
         assessedDocs = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').where(u'Status',u'==',u'Assessed').get()
         for subdoc in assessedDocs:
             list3.append((subdoc.id,doc.id,email))
+            states.append(db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['state'])
+            date = db.collection(u'FIR_NCR').document(u'{}'.format(doc.id)).collection(u'NCR').document(subdoc.id).get().to_dict()['Date of Incident']
+            dates.append(date)
 
-    return render(request, "ncr.html", {"user":request.session['username'], "category":"NCR", "pending_id_list":list1, "progress_id_list":list2, "assessed_id_list":list3, "ncr_active": "active", "assesedNo" : len(list3), "progressNo":len(list2), "newNo":len(list1) })
+    # creating dates dict with date : no of cases
+    for i in range(len(dates)):
+        # converting to DateTime for sorting
+        dates[i] = datetime.datetime.strptime(dates[i], '%Y-%m-%d').date()
+    dates.sort()
+    datesDic = {}
+    i = 0
+    for date in dates:
+        i += 1
+        # convertind date to string 'm-d-Y' format for
+        datesDic[date.strftime("%m-%d-%Y")] = i
+    for key in datesDic.keys():
+        print(key, datesDic[key])
+
+    return render(request, "ncr.html", {"user":request.session['username'], "category":"NCR", "pending_id_list":list1, "progress_id_list":list2, "assessed_id_list":list3, "ncr_active": "active", "assesedNo" : len(list3), "progressNo":len(list2), "newNo":len(list1), "states": states, "dates":datesDic })
 
 def police(request):
     return render(request, "police.html")
@@ -458,7 +606,6 @@ def faceevidence(request, doc_id, rep_id):
         os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')
 
     return redirect(hotReport,user=request.session['username'])
-
 
 def face_recog(url=['http://ipfs.io/ipfs/QmcgBRywQf63rZdD27M9aVnSn1puwjchvqepAUE7zcKqCD']):
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -179,9 +179,39 @@
                     </div>
                 </div>
             </div>
+            <div class="row justify-content-around">
+                <div class="col-lg-6">
+                    <div class="card mycard">
+                        <b>Image Evidences:</b> 
+                        <ul style="margin-bottom: 0;">
+                        {% for i in images %}
+                            <a href="{{i}}"><li>image-{{ forloop.counter }}.png</li></a>
+                        {% endfor %}       
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card mycard">
+                        <b>Video Evidences:</b> 
+                        <ul style="margin-bottom: 0;">
+                        {% for i in videos %}
+                            <a href="{{i}}"><li>video-{{ forloop.counter }}.mp4</li></a>
+                        {% endfor %}       
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="row justify-content-center">
                 <form action="{% url "details" category=metadata|getkey:"category" user=metadata|getkey:"user" uid=metadata|getkey:"uid" case_id=metadata|getkey:"case_id" %}" method="GET">
                     <input name="email" type="hidden" value="{{ data|getkey:"email" }}">
+                    <input type="hidden" name="vlen" value="{{ videos|length }}">
+                    {% for i in videos %}
+                        <input name="v{{forloop.counter}}" type="hidden" value="{{ i }}">
+                    {% endfor %}
+                    <input type="hidden" name="ilen" value="{{ images|length }}">
+                    {% for i in images %}
+                        <input name="i{{forloop.counter}}" type="hidden" value="{{ i }}">
+                    {% endfor %}
                     {% if data|getkey:"Status" != "Accepted" %}
                     <button type="submit" name="accept" class="btn btn-success" style="margin-right:5px" value="accpt">Accept</button>
                     {% endif %}

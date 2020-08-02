@@ -1,16 +1,31 @@
 *{
- margin:0px;
- padding:0px;
- box-sizing: border-box;
+    margin:0px;
+    padding:0px;
+    box-sizing: border-box;
 }
 
-nav{
-    display: flex;
-    justify-content: space-around;
+.navbar{
+    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
+    z-index: 100;
+}
+.userinfo{
+    height: 100vh;
+    position: fixed;
+    border-radius: 0px; 
+    z-index: -1;
+    /* background-image:linear-gradient(to right, #fe8c00 95%, #f83600 5%) !important; */
+}
+
+.chartcard{
+    margin: 0.5em 0;
+}
+
+.mycontainer{
+    height: auto;
     align-items: center;
-    min-height: 8vh;
-    background-color: blue;
-    font-family: 'Poppins', sans-serif;
+    justify-content: center;
+    margin-top:76px;
+    margin-left: 225px;  
 }
 
 .logo{
@@ -37,12 +52,17 @@ nav{
     align-items: center !important;
     min-height: 8vh !important;
     background-color: blue;
-    
+
 }
 .footer-font{
-    color: white !important;
+    color: white !important;    
+}
+
+footer{ 
+    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
+    z-index: 100;
 }
 
 hr{
-    border-color: white !important
+    border-color: white !important  
 }

@@ -1,0 +1,53 @@
+body{
+    overflow-x: hidden;
+}
+aside{
+    display: inline-block;
+    float:left;
+}
+.card{
+    padding: 0.5em;
+    overflow: auto;
+}
+.navbar{
+    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
+    z-index: 100;
+}
+.userinfo{
+    height: 100vh;
+    position: fixed;
+    border-radius: 0px; 
+    z-index: -1;
+    /* background-image:linear-gradient(to right, #fe8c00 95%, #f83600 5%) !important; */
+}
+.mycard{
+    padding: 0;
+    margin: 0.5em 0;
+}
+.chartcard{
+    margin: 0.5em 0;
+}
+.mycontainer{
+    height: auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top:76px;
+    margin-left: 225px;  
+}
+.card a{
+    color: #212529;
+}
+.card ul li{
+    list-style-type: none;
+}
+.card a:hover{
+    color: blue;
+}
+.card a:link {
+    text-decoration: none;
+}
+footer{ 
+    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
+    z-index: 100;
+}

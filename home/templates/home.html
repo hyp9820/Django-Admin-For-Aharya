@@ -36,43 +36,38 @@
             text-decoration: none;
         }
     </style>
-
-    <script>
-        window.onload = function() {
-
-        var chart = new CanvasJS.Chart("chartContainer", {
-            animationEnabled: true,
-            title: {
-                text: "Cases Representaion"
-            },
-            data: [{
-                type: "pie",
-                startAngle: 240,
-                yValueFormatString: "##0",
-                indexLabel: "{label} {y}",
-                dataPoints: [
-                    {y: {{ assesedNo }}, label: "Assesed Cases:"},
-                    {y: {{ progressNo }}, label: "Cases in Process:"},
-                    {y: {{ newNo }}, label: "New/Pending Cases:"},
-                ]
-            }]
-        });
-        chart.render();
-        
-        }
-    </script>     
+   
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>   
 <body>
     {% include "navbar.html" %}   
         <aside>
-            <div class="card">            
+            <div class="card userinfo">            
                 <b>User:</b> {{user}}
+                <strong>Total Number of Cases:</strong> {{newNo|add:progressNo|add:assesedNo}}
+                <strong>Pending Cases:</strong> {{newNo}}
+                <strong>In Process Cases:</strong> {{progressNo}}
+                <strong>Accepted Cases:</strong> {{assesedNo}}
             </div>
         </aside>
-        <div class="row justify-content-around">
-            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-        </div>
         <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card chartcard">
+                        <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+                        {% comment %} <div id="chartContainer" style="height: auto; width: auto;"></div> {% endcomment %}
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card chartcard">
+                        <div id="chartContainerState" style="height: 300px; width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card chartcard">
+                        <div id="chartContainerTime" style="height: 300px; width: 100%;"></div>        
+                    </div>
+                </div>
+            </div>
             <div class="row justify-content-around">
                 <div class="col-lg-4">
                     <div class="card mycard">
@@ -128,6 +123,110 @@
             }
             });
         });
+    </script>
+
+    <script>
+        function drawGraphPie() {
+            var chart = new CanvasJS.Chart("chartContainer", {
+                animationEnabled: true,
+                exportFileName: "FIR Status Categorized Reports",  //Give any name accordingly
+		        exportEnabled: true,
+                title: {
+                    text: "Status Categorized Reports"
+                },
+                data: [{
+                    type: "pie",
+                    startAngle: 240,
+                    yValueFormatString: "##0",
+                    indexLabel: "{label} {y}",
+                    dataPoints: [
+                        {y: {{ assesedNo }}, label: "Assesed Cases:"},
+                        {y: {{ progressNo }}, label: "Cases in Process:"},
+                        {y: {{ newNo }}, label: "New/Pending Cases:"},
+                    ]
+                }]
+            });
+            chart.render();
+        }
+    </script>  
+    <script>
+        function drawGraphTime() {
+            var chart = new CanvasJS.Chart("chartContainerTime", {
+                animationEnabled: true,
+                zoomEnabled: true,
+                zoomType: "x",
+                exportFileName: "FIR TimeLine Of Report Arrival",  //Give any name accordingly
+		        exportEnabled: true,
+                title: {
+                    text: "TimeLine Of Report Arrival"
+                },
+                data: [{
+                    type: "spline",
+                    dataPoints: [
+                        {% for date, value in dates.items %}
+                            {x:new Date("{{date}}"), y: {{ value }} },
+                        {% endfor %}
+                    ]
+                }]
+            });
+            chart.render();
+        }
+    </script> 
+    <script>
+        function drawGraphState() {
+            graphData = []
+            for (item in stateCount) {
+                // console.log(item)
+                graphData.push({y : stateCount[item], label:item});
+            }
+            console.log(graphData)
+            var chart = new CanvasJS.Chart("chartContainerState",
+            {
+            animationEnabled: true,
+            animationDuration: 2000,
+            exportFileName: "FIR State Categorized Reports",  //Give any name accordingly
+		    exportEnabled: true,
+            title:{
+                text: "State Categorized Reports"
+            },
+            data: [
+
+            {
+                dataPoints: graphData
+            }
+            ]
+            });
+            chart.render();
+            setTimeout(drawGraphPie, 100);
+            setTimeout(drawGraphTime, 100);
+
+        }
+    </script>
+    <script>
+    states = "{{states|escapejs}}"
+    states = states.replace(/[^0-9,A-z]/g, '');
+    states = states.slice(1,states.length-1).split(",")
+    console.log(states)
+    stateCount = {}
+    for (i=0; i<states.length; i++) {
+        let name = states[i];
+        name = name.toLowerCase().trim();
+        let temp = name.split(" ");
+        name = ""
+        for (let i=0; i<temp.length; i++) {
+            if(i != 0) {
+                name += " ";
+            }
+            name += temp[i][0].toUpperCase() + temp[i].slice(1,temp[i].length);
+        }
+        if(stateCount.hasOwnProperty(name)) {
+            stateCount[name] += 1
+        }
+        else {
+            stateCount[name] = 1;
+        }
+    }    
+    drawGraphState();
     </script>
 </body>
 </html>

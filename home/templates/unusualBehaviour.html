@@ -64,7 +64,7 @@
 <body>
     {% include "navbar.html" %}
         <aside>
-            <div class="card">            
+            <div class="card userinfo">            
                 <strong>User:</strong> {{user}}
                 <strong>Total Number of Cases:</strong> {{total_cases}}
                 <strong>Pending Cases:</strong> {{pending_cases}}
@@ -72,10 +72,15 @@
                 <strong>Accepted Cases:</strong> {{accepted_cases}}
             </div>
         </aside>
-        <div class="row justify-content-around">
-            <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-        </div>
+
         <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card chartcard">
+                        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
             <div class="row justify-content-around">
                 <div class="col-lg-4">
                     <div class="card mycard">

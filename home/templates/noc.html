@@ -36,17 +36,57 @@
         }
     </style>
 {% include "header.html" %}
+
+    <script>
+        window.onload = function() {
+
+        var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            exportFileName: "NOC Status Categorized Reports",  //Give any name accordingly
+            exportEnabled: true,
+            title: {
+                text: "Status Categorized Reports"
+            },
+            data: [{
+                type: "pie",
+                startAngle: 240,
+                yValueFormatString: "##0",
+                indexLabel: "{label} {y}",
+                dataPoints: [
+                    {y: {{ accepted_cases }}, label: "Assesed Cases:"},
+                    {y: {{ inprocess_cases }}, label: "Cases in Process:"},
+                    {y: {{ pending_cases }}, label: "New/Pending Cases:"},
+                ]
+            }]
+        });
+        chart.render();
+        
+        }
+    </script>     
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>   
 <body>
     {% include "navbar.html" %}
         <aside>
-            <div class="card">            
+            <div class="card userinfo">            
                 <strong>User:</strong> {{user}}
+                <strong>Total Number of Cases:</strong> {{total_cases}}
+                <strong>Pending Cases:</strong> {{pending_cases}}
+                <strong>In Process Cases:</strong> {{inprocess_cases}}
+                <strong>Accepted Cases:</strong> {{accepted_cases}}
+            </div>
             </div>
         </aside>
         {% comment %} <div class="row justify-content-around">
             <div id="chartContainer" style="height: 370px; width: 100%;"></div>
         </div> {% endcomment %}
         <div class="mycontainer">
+            <div class="row justify-content-around">
+                <div class="col-lg-4">
+                    <div class="card chartcard">
+                        <div id="chartContainer" style="height: 370px; width: 100%;"></div> 
+                    </div>
+                </div>
+            </div>
             <div class="row justify-content-around">
                 <div class="col-lg-4">
                     <div class="card mycard">

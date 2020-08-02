@@ -31,7 +31,7 @@ urlpatterns = [
     path('ncr/<user>/', views.ncr, name='ncr'),
     path('paidbribe/<user>/', views.paidBribe, name='paidbribe'),
     path('hotreport/<user>/', views.hotReport, name='hotreport'),
-    # path('fighter/<user>/', views.bribeFighter, name='fighter'),
+    path('rti/<user>/', views.rti, name='rti'),
     path('unusual/<user>/', views.unusualBehaviour, name='unusual'),
 
 
