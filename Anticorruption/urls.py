@@ -24,6 +24,7 @@ from home import views
 urlpatterns = [
     path('', views.login, name='login'),
     path('register', views.register, name='register'),
+    path('sendotp/', views.sendOtp, name="sendOtp"),
 
     # path('home', views.home, name='home'),
     path('fir/<user>/', views.home, name='fir'),
@@ -33,7 +34,6 @@ urlpatterns = [
     path('hotreport/<user>/', views.hotReport, name='hotreport'),
     path('rti/<user>/', views.rti, name='rti'),
     path('unusual/<user>/', views.unusualBehaviour, name='unusual'),
-
 
     # path('details/<user>/<uid>/<case_id>/', views.details, name='details'),
     path('details/<category>/<user>/<uid>/<case_id>/', views.details, name='details'),

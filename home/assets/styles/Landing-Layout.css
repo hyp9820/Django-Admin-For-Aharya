@@ -4,10 +4,6 @@
     box-sizing: border-box;
 }
 
-.navbar{
-    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
-    z-index: 100;
-}
 .userinfo{
     height: 100vh;
     position: fixed;
@@ -34,35 +30,10 @@
     font-size: 22px;
 }
 
-.nav-links{
-    display: flex;
-    justify-content: space-around;
-    width: 30%;
-}
-.nav-links a{
-    color: blue;
-    text-decoration: none;
-    letter-spacing: 1px;
-    font-weight: bold;
-    font-size: 14px;
-}
-.navbar-color{
-    display: flex !important; 
-    justify-content: space-around !important;
-    align-items: center !important;
-    min-height: 8vh !important;
-    background-color: blue;
 
-}
 .footer-font{
     color: white !important;    
 }
-
-footer{ 
-    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
-    z-index: 100;
-}
-
 hr{
     border-color: white !important  
 }

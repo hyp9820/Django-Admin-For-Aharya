@@ -6,15 +6,21 @@
     {% load static %}
     <link rel="stylesheet" href="{% static "css\login.css" %}">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-    {% include "navbar.html" %}
-    <div class="row">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <a class="navbar-brand" href="{% url 'fir' user=user %}">
+        {% comment %} <img src="{% static "images/bprd.png" %}" width="300px" height="50" alt="" loading="lazy"> {% endcomment %}
+        <img src="{% static "images/logo.png" %}" width="50" height="50" alt="" style="margin-right:20px;"loading="lazy">
+        Bureau of Police Research and Development
+    </a>
+    </nav>
+    <div class="row" style="margin-top:90px;">
         <div class="col-md-10 m-auto">
             <div class="card">
                 <div class="card-header">
                     Register
                 </div>
                 <div class="card-body">
-                    <form action="register" method="POST">
+                    <form action="register" method="POST" name="registerform">
                         {% csrf_token %}
                         <div class="form-group">
                             <h5 class="card-title" for="Name">Name</h5>
@@ -51,11 +57,11 @@
                             <div class='row'>
                                 <div class='col-lg-6'>    
                                     <h5 class="card-title" for="exampleInputEmail1">Phone Number</h5>
-                                    <input type="number" class="form-control" name="phone" aria-describedby="phone number" pattern="\d{10}">
+                                    <input type="number" class="form-control" name="phone" aria-describedby="phone number" pattern="\d{10}" >
                                 </div>
                                 <div class='col-lg-6'>
                                     <h5 class="card-title" for="exampleInputEmail1">Email</h5>
-                                    <input type="email" class="form-control" name="email" aria-describedby="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$">
+                                    <input type="email" class="form-control" name="email" aria-describedby="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" id="useremail">
                                 </div>
                             </div>
                         </div>
@@ -120,13 +126,77 @@
                                 </div> 
                             </div>                       
                         </div>
-                        <button type="submit" class="btn btn-primary active">Register</button>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#otp" id="otpBtn">
+                            Register
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="otp" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Enter OTP sent on mail</p>
+                                <input type="number" id ="otp">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick="checkOTP()">Submit</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                        <!-- <button type="submit" class="btn btn-primary active" id="btnsubmit">Register</button> -->
                         <a class="btn btn-secondary active" href="{% url 'login'%}">Login</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        var otp = undefined
+        var timestamp = undefined
+        $("#otpBtn").click(function(){
+            useremail = document.getElementById("useremail").value;
+
+            $.ajax({
+                url: '/sendotp/',
+                type: 'get',
+                dataType: 'json',
+                data: {email:useremail},
+                success: function(response){
+                    otp = response['otp'].split('~')[0];
+                    timestamp = response['otp'].split('~')[1];
+                    console.log(otp)
+                }
+            });
+
+        });
+        function checkOTP() {
+            if(otp = undefined) {
+                return
+            }
+            userOtp = document.getElementById("otp").value;
+            // // console.log("otp: ", userOtp == otp)
+            // var now = new Date()
+            // var date = now.toLocaleDateString()
+            // // console.log("Date: ", date.localeCompare(timestamp.split(','))[0]);
+            // console.log(date.localeCompare(timestamp.split(',')[0]) == 0);
+            // console.log(date)
+            // console.log()
+            // console.log(now.toLocaleTimeString());
+            if(otp == userOtp) {
+                console.log("success");
+                document.registerform.submit();
+                window.location = "/";
+            }
+        };
+    </script>
     {% include "footer.html" %}
 </body>
 

@@ -2,6 +2,14 @@
 <!-- Footer -->
 <link rel="stylesheet" href="{% static "styles/Landing-Layout.css" %}" >
 <style>
+footer{ 
+    background-color: #c5c6c7;
+    {% comment %} background-image: linear-gradient(to bottom, #FFB75E 0%, #ED8F03 100%); {% endcomment %}
+    z-index: 100;
+}
+.footer-copyright{
+  color:black;
+}
   a{
     color: white;
     text-decoration: none;
@@ -14,7 +22,7 @@
 <footer class="page-footer footer-font">
 <div class="row mt-3"></div>
   <!-- Footer Links -->
-  <div class="container text-center text-md-left mt-5">
+  <div class="container text-center text-md-left mt-3">
 
     {% comment %} <!-- Grid row -->
     <div class="row mt-3">
@@ -81,7 +89,7 @@
     </div> {% endcomment %}
     <!-- Grid row -->
     <div class="row justify-content-center">
-      <img src="{% static 'images/india.png' %}" class="mx-auto" alt="">
+      <img src="{% static 'images/india.png' %}" class="mx-auto" style="height: 45px;" alt="">
     </div>
   </div>
   <!-- Copyright -->

@@ -6,10 +6,13 @@ from firebase_admin import credentials, firestore, auth, threading
 from django.core.mail import send_mail
 import cv2
 import os
-import face_recognition
+#import face_recognition
 import urllib.request as req
 import time
 import datetime
+from django.http import JsonResponse
+from django.utils.crypto import get_random_string
+
 
 config={
     'apiKey': "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
@@ -93,7 +96,22 @@ def register(request):
                 'id-type': idtype
             })
     return render(request, "register.html")
-  
+
+def sendOtp(request):
+    email = request.GET['email']
+    otp = get_random_string(6, allowed_chars='0123456789')
+    send_mail(
+        'Noreply OTP',
+        'Your otp is ' + otp, #+ '. Enter otp within 5 mins',
+        'aharyaindia@gmail.com',
+        [email],
+        fail_silently = False,
+    )
+    #response to ajax req
+    # res -> otp + timestamp
+    date = datetime.datetime.now()
+    return JsonResponse({"otp": str(otp)+"~"+'08/01/2020,23:31:34'}, status=200)
+
 def logout(request):
     if request.session.has_key('username'):
         request.session.flush()
@@ -175,7 +193,7 @@ def details(request, category, user, uid, case_id):
             return redirect(paidBribe, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
-                u'Status': u'Accepted'
+                u'Status': u'Assessed'
             }, merge=True)
             # Sent Email
             print("Sending Email")
@@ -206,8 +224,21 @@ def details(request, category, user, uid, case_id):
         temp = db.collection('EvidenceLinks').document(data['id']).get().to_dict()
         image_evidence = temp['EvidenceLinkImage']
         video_evidence = temp['EvidenceLinkVideo']
-        image_evidence.pop()
-        video_evidence.pop()
+        if len(image_evidence) >= 1:
+            image_evidence.pop()
+        if len(video_evidence)>=1:
+            video_evidence.pop()
+
+        for i in range(image_evidence.count('http://ipfs.io/ipfs/')):
+            image_evidence.remove('http://ipfs.io/ipfs/')
+        for i in range(image_evidence.count('http://ipfs.io/ipfs/undefined')):
+            image_evidence.remove('http://ipfs.io/ipfs/undefined')
+
+        for i in range(video_evidence.count('http://ipfs.io/ipfs/')):
+            video_evidence.remove('http://ipfs.io/ipfs/')
+        for i in range(video_evidence.count('http://ipfs.io/ipfs/undefined')):
+            video_evidence.remove('http://ipfs.io/ipfs/undefined')
+
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'In Process'
@@ -279,7 +310,7 @@ def details(request, category, user, uid, case_id):
             return redirect(noc, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
-                u'Status': u'Accepted'
+                u'Status': u'Assessed'
             }, merge=True)
             return redirect(noc, user=user)
         print("***************",category,"**************")
@@ -304,9 +335,21 @@ def details(request, category, user, uid, case_id):
             return redirect(unusualBehaviour, user=user)
         if request.GET.get('accept')=='accpt':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
-                u'Status': u'Accepted'
+                u'Status': u'Assessed'
             }, merge=True)
             return redirect(unusualBehaviour, user=user)
+        if request.GET.get('evid')=='evidence':
+            vlen = request.GET.get('vlen')
+            ilen = request.GET.get('ilen')
+            vids = []
+            imgs = []
+            for i in range(int(ilen)):
+                imgs.append(request.GET.get('i'+str(i+1)))
+            for v in range(int(vlen)):
+                vids.append(request.GET.get('i'+str(i+1)))
+            print(imgs)
+            print(vids)
+            face_recog()
 
         print("***************",category,"**************")
         doc_ref = db.collection(category).document(uid).collection(u'all_data').document(case_id)
@@ -315,11 +358,30 @@ def details(request, category, user, uid, case_id):
         data = {}
         for i in sorted(case_data):
             data[i] = case_data[i]
+
+        temp = db.collection('EvidenceLinks').document(data['id']).get().to_dict()
+        image_evidence = temp['EvidenceLinkImage']
+        video_evidence = temp['EvidenceLinkVideo']
+        if len(image_evidence) >= 1:
+            image_evidence.pop()
+        if len(video_evidence)>=1:
+            video_evidence.pop()
+
+        for i in range(image_evidence.count('http://ipfs.io/ipfs/')):
+            image_evidence.remove('http://ipfs.io/ipfs/')
+        for i in range(image_evidence.count('http://ipfs.io/ipfs/undefined')):
+            image_evidence.remove('http://ipfs.io/ipfs/undefined')
+
+        for i in range(video_evidence.count('http://ipfs.io/ipfs/')):
+            video_evidence.remove('http://ipfs.io/ipfs/')
+        for i in range(video_evidence.count('http://ipfs.io/ipfs/undefined')):
+            video_evidence.remove('http://ipfs.io/ipfs/undefined')
+
         if data['Status'] == 'Pending':
             db.collection(category).document(uid).collection(u'all_data').document(case_id).set({
                 u'Status': u'In Process'
             }, merge=True)
-        return render(request, "ubDetails.html", {"user":request.session['username'], "data":data, "metadata":metadata})
+        return render(request, "ubDetails.html", {"user":request.session['username'], "data":data, "images":image_evidence, "videos":video_evidence, "metadata":metadata})
     
 def paidBribe(request, user):
 
@@ -362,7 +424,7 @@ def paidBribe(request, user):
             date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
             dates.append(date)
 
-        acceptedDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
+        acceptedDocs = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Assessed').get()
         for subdoc in acceptedDocs:
             list3.append((subdoc.id,doc.id, email))
             states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
@@ -403,7 +465,7 @@ def hotReport(request, user):
         uid = request.GET.get('uid')
         case_id = request.GET.get('subid')
         db.collection(u'Hot Report').document(uid).collection(u'all_data').document(case_id).set({
-            u'Status': u'Accepted'
+            u'Status': u'Assessed'
         }, merge=True)
         return redirect(hotReport, user=user)
 
@@ -415,8 +477,10 @@ def hotReport(request, user):
         # print(email)
         reports = db.collection(u'Hot Report').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Pending').get()
         for report in reports:
-            lst.append((report.id,doc.id, email, report.to_dict()))
-            print(report.to_dict())
+            dic = report.to_dict()
+            dic['End Stamp'] = dic['End Stamp'][:-7]
+            dic['Start Stamp'] = dic['Start Stamp'][:-7]
+            lst.append((report.id,doc.id, email, dic))
 
     return render(request, "hotReport.html",  {"user":request.session['username'], "category":"hot", "hot_active": "active", "data":lst})
 
@@ -484,7 +548,7 @@ def unusualBehaviour(request, user):
         for subdoc in inProcessDocs:
             list2.append((subdoc.id,doc.id, email))
 
-        acceptedDocs = db.collection(u'UnusualBehaviour').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
+        acceptedDocs = db.collection(u'UnusualBehaviour').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Assessed').get()
         for subdoc in acceptedDocs:
             list3.append((subdoc.id,doc.id, email))
 
@@ -525,7 +589,7 @@ def noc(request, user):
             # date = db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['date']
             # dates.append(date)
 
-        acceptedDocs = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Accepted').get()
+        acceptedDocs = db.collection(u'NOC').document(u'{}'.format(doc.id)).collection(u'all_data').where(u'Status',u'==',u'Assessed').get()
         for subdoc in acceptedDocs:
             list3.append((subdoc.id,doc.id, email))
             # states.append(db.collection(u'PaidBribe').document(u'{}'.format(doc.id)).collection(u'all_data').document(subdoc.id).get().to_dict()['state'])
@@ -607,6 +671,7 @@ def faceevidence(request, doc_id, rep_id):
 
     return redirect(hotReport,user=request.session['username'])
 
+""" 
 def face_recog(url=['http://ipfs.io/ipfs/QmcgBRywQf63rZdD27M9aVnSn1puwjchvqepAUE7zcKqCD']):
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     KNOWN_FACES_DIR = str(BASE_DIR)+'\\home\\known_faces'
@@ -730,3 +795,4 @@ def face_recog(url=['http://ipfs.io/ipfs/QmcgBRywQf63rZdD27M9aVnSn1puwjchvqepAUE
             cv2.destroyWindow("")
         # os.close(f'{UNKNOWN_FACES_DIR}\\{filename}')
         # os.remove(f'{UNKNOWN_FACES_DIR}\\{filename}')
+  """

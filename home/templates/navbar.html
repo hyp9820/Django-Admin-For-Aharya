@@ -1,10 +1,39 @@
 {% load static%}
-<link rel="stylesheet" href="{% static "styles/Landing-Layout.css" %}" >
+<style>
+.navbar{
+    background-color: #c5c6c7;
+    {% comment %} background-image: linear-gradient(to bottom, #FFB75E 0%, #ED8F03 100%); {% endcomment %}
+    z-index: 100;
+}
+.nav-links{
+    display: flex;
+    justify-content: space-around;
+    width: 30%;
+}
+.nav-links a{
+    color: blue;
+    text-decoration: none;
+    letter-spacing: 1px;
+    font-weight: bold;
+    font-size: 14px;
+}
+.navbar-color{
+    display: flex !important; 
+    justify-content: space-around !important;
+    align-items: center !important;
+    min-height: 8vh !important;
+    background-color: blue;
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+}
+</style>
+
+{% comment %} <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top"> {% endcomment %}
+<nav class="navbar navbar-expand-lg navbar-light fixed-top">
 
   <a class="navbar-brand" href="{% url 'fir' user=user %}">
-    <img src="{% static "images/bprd.png" %}" width="400" height="50" alt="" loading="lazy">
+    {% comment %} <img src="{% static "images/bprd.png" %}" width="300px" height="50" alt="" loading="lazy"> {% endcomment %}
+    <img src="{% static "images/logo.png" %}" width="50" height="50" alt="" style="margin-right:20px;"loading="lazy">
+    Bureau of Police Research and Development
   </a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>

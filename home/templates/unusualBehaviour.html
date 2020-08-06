@@ -1,48 +1,20 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 {% include "header.html" %}
-    <style>
-        body{
-            overflow-x: hidden;
-        }
-        aside{
-            display: inline-block;
-            float:left;
-        }
-        .card{
-            padding: 0.5em;
-            overflow: auto;
-        }
-        .mycard{
-            padding: 0;
-            margin: 0.5em 0;
-        }
-        .mycontainer{
-            height: auto;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        .card a{
-            color: #212529;
-        }
-        .card ul li{
-            list-style-type: none;
-        }
-        .card a:hover{
-            color: blue;
-        }
-        .card a:link {
-            text-decoration: none;
-        }
-    </style>
+<link rel="stylesheet" href="{% static "styles/card.css" %}" >
+<style>
+    .nav-link{
+        color: black;
+    }
+</style>
     <script>
         window.onload = function() {
 
         var chart = new CanvasJS.Chart("chartContainer", {
             animationEnabled: true,
             title: {
-                text: "Cases Representaion"
+                text: "Cases Representation"
             },
             data: [{
                 type: "pie",
@@ -63,65 +35,79 @@
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>   
 <body>
     {% include "navbar.html" %}
-        <aside>
-            <div class="card userinfo">            
-                <strong>User:</strong> {{user}}
-                <strong>Total Number of Cases:</strong> {{total_cases}}
-                <strong>Pending Cases:</strong> {{pending_cases}}
-                <strong>In Process Cases:</strong> {{inprocess_cases}}
-                <strong>Accepted Cases:</strong> {{accepted_cases}}
-            </div>
-        </aside>
+    {% include "card1.html" %}
 
-        <div class="mycontainer">
-            <div class="row justify-content-around">
-                <div class="col-lg-4">
+
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-4">
                     <div class="card chartcard">
                         <div id="chartContainer" style="height: 370px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-around">
-                <div class="col-lg-4">
-                    <div class="card mycard">
-                        <div class="card-header">
-                            Cases Accepted
+        </div>
+            <div class="container">
+                <ul class="nav nav-tabs">
+                  <li class="nav-item">
+                    <a class="nav-link" id="pills-home-tab" data-toggle="pill" href="#home" role="tab" aria-controls="pills-home" aria-selected="true">Cases Accepted</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#menu1" role="tab" aria-controls="pills-profile" aria-selected="false">Cases In Process</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="pills-contact-tab" data-toggle="pill" href="#menu2" role="tab" aria-controls="pills-contact" aria-selected="false">New/Pending Cases</a>
+                  </li>
+                </ul>
+                
+                <div class="tab-content">
+                  <div id="home" class="tab-pane fade">
+                    <div class="col-lg-12">
+                        <div class="card mycard">
+                            <div class="card-header">
+                                <b>Cases Accepted</b>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                {% for i,j,e in accepted %}
+                                    <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                    <span class="text-muted">{{e}}</span></li></a>
+                                {% endfor %}
+                            </ul>
                         </div>
-                        <ul class="list-group list-group-flush">
-                            {% for i,j,e in accepted %}
-                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
-                                <span class="text-muted">{{e}}</span></li></a>
-                            {% endfor %}
-                        </ul>
                     </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card mycard">
-                        <div class="card-header">
-                            Cases In Process
+                  </div>
+                  <div id="menu1" class="tab-pane fade">
+                    <div class="col-lg-12">
+                        <div class="card mycard">
+                            <div class="card-header">
+                                <b>Cases In Process</b>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                {% for i,j,e in inprocess %}
+                                    <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                    <span class="text-muted">{{e}}</span></li></a>
+                                {% endfor %}
+                            </ul>
                         </div>
-                        <ul class="list-group list-group-flush">
-                            {% for i,j,e in inprocess %}
-                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
-                                <span class="text-muted">{{e}}</span></li></a>
-                            {% endfor %}
-                        </ul>
                     </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card mycard">
-                        <div class="card-header">
-                            New/Pending Cases
+                  </div>
+                  <div id="menu2" class="tab-pane fade">
+                    <div class="col-lg-12">
+                        <div class="card mycard">
+                            <div class="card-header">
+                                <b>New/Pending Cases</b>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                {% for i,j,e in pending %}
+                                    <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
+                                    <span class="text-muted">{{e}}</span></li></a>
+                                {% endfor %}
+                            </ul>
                         </div>
-                        <ul class="list-group list-group-flush">
-                            {% for i,j,e in pending %}
-                                <a href="{% url "details" category=category user=user uid=j case_id=i %}" class="list-group-item"><li>{{i}}<br>
-                                <span class="text-muted">{{e}}</span></li></a>
-                            {% endfor %}
-                        </ul>
                     </div>
+                  </div>
                 </div>
-            </div>
+              </div>
         </div>
     {% include "footer.html" %}
     <script>

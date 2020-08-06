@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 {% load getkey %}
+{% load static %}
 <html lang="en">
+{% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css"> {% endcomment %}
 {% include "header.html" %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init();
+</script>
     <style>
         body{
             overflow-x: hidden;
@@ -22,6 +29,8 @@
             height: auto;
             align-items: center;
             justify-content: center;
+            {% comment %} margin-top:100px;
+            margin-left: 225px; {% endcomment %}
         }
         .card a{
             color: #212529;
@@ -39,86 +48,48 @@
             float:right;
         }
     </style>
-    {% comment %} <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-analytics.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-firestore.js"></script>
-    <script>
-    // Your web app's Firebase configuration
-    var firebaseConfig = {
-        apiKey: "AIzaSyDMD127uosKN8bfmhCD_jwz_q09En2T_0g",
-        authDomain: "bribe-block.firebaseapp.com",
-        databaseURL: "https://bribe-block.firebaseio.com",
-        projectId: "bribe-block",
-        storageBucket: "bribe-block.appspot.com",
-        messagingSenderId: "883197621162",
-        appId: "1:883197621162:web:e1cb0f7c7735f6e84eb1d3",
-        measurementId: "G-GXPSH1W25J"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    firebase.analytics();
-
-    const db = firebase.firestore();
-
-    db.collection("Hot Report")
-    .onSnapshot(function(querySnapshot) {
-        var addr,uid,url;
-        querySnapshot.forEach(function(doc) {
-            db.collection("Hot Report").doc(doc.id).collection("all_data").get().then(function (subQuerySnapshot) {
-                subQuerySnapshot.forEach(function(subdoc) {
-                    //location.reload()
-                    console.log(subdoc.id, "=>" , subdoc.data().Address)
-                });
-            });
-        });
-    });
-    </script> {% endcomment %}
 <body>
     {% include "navbar.html" %}
-        <aside>
-            <div class="card userinfo">            
-                <strong>User:</strong> {{user}}
-            </div>
-        </aside>
-        <div class="mycontainer">
-            <div class="row justify-content-start">
-                <div class="col-lg">
-                    <div class="card mycard">
-                        <div class="card-header">
-                            Hot Reports
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            {% for i,j,e,d in data %}
-                                <li class="list-group-item">
-                                <div class="row">
-                                    <div class="col-lg"><b>Case ID: </b>{{d|getkey:'complaintID'}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-lg-6 text-muted"><b>User ID: </b>{{d|getkey:'Uid'}}</div>
-                                    <div class="col-lg-6 text-muted"><b>Email: </b>{{e}}</div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-lg-6 text-muted"><b>Start Time: </b>{{d|getkey:"End Stamp"}}</div>
-                                    <div class="col-lg-6 text-muted"><b>End Time: </b>{{d|getkey:"Start Stamp"}}</div>
-                                </div>
-                                <button class="btn btn-primary btn-sm" onclick="window.location.href = `{{d|getkey:'Url'}}`;">View Evidence</button>
-                                <form action="{% url 'faceevidence' doc_id=j rep_id=i %}" method="GET" style="display: inline;">
-                                    <button type="submit" name="evid" class="btn btn-info btn-sm" value="evidence">View Faces</button>
-                                </form>
-                                <form action="{% url 'hotreport' user=user %}" method="GET" style="display: inline;">
-                                    <input name="subid" type="hidden" value="{{i}}">
-                                    <input name="uid" type="hidden" value="{{j}}">
-                                    <button type="submit" name="accept" class="btn btn-success btn-sm" value="accpt">Accept</button>
-                                    <button type="submit" name="delete" class="btn btn-danger btn-sm" value="del">Delete</button>
-                                </form>
-                                </span>
-                                </li>
-                            {% endfor %}
-                        </ul>
+    <div class="container" style="margin-top: 80px">
+        <div class="row justify-content-start">
+            <div class="col-lg-12">
+                <div class="card mycard">
+                    <div class="card-header">
+                        Hot Reports
                     </div>
+                    <ul class="list-group list-group-flush">
+                        {% for i,j,e,d in data %}
+                            <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-lg"><b>Case ID: </b>{{d|getkey:'complaintID'}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 text-muted"><b>User ID: </b>{{d|getkey:'Uid'}}</div>
+                                <div class="col-lg-6 text-muted"><b>Email: </b>{{e}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 text-muted"><b>Start Time: </b>{{d|getkey:"End Stamp"}}</div>
+                                <div class="col-lg-6 text-muted"><b>End Time: </b>{{d|getkey:"Start Stamp"}}</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="window.location.href = `{{d|getkey:'Url'}}`;">View Evidence</button>
+                            {% comment %} <form action="{% url 'faceevidence' doc_id=j rep_id=i %}" method="GET" style="display: inline;">
+                                <button type="submit" name="evid" class="btn btn-info btn-sm" value="evidence">View Faces</button>
+                            </form> {% endcomment %}
+                            <form action="{% url 'hotreport' user=user %}" method="GET" style="display: inline;">
+                                <input name="subid" type="hidden" value="{{i}}">
+                                <input name="uid" type="hidden" value="{{j}}">
+                                <button type="submit" name="accept" class="btn btn-success btn-sm" value="accpt">Accept</button>
+                                <button type="submit" name="delete" class="btn btn-danger btn-sm" value="del">Delete</button>
+                            </form>
+                            </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
+    </div>
     {% include "footer.html" %}
 </body>
+
 </html>

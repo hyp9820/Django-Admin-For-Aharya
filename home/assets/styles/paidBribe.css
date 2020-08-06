@@ -9,32 +9,28 @@ aside{
     padding: 0.5em;
     overflow: auto;
 }
-.navbar{
-    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
-    z-index: 100;
-}
 .userinfo{
     height: 100vh;
     position: fixed;
     border-radius: 0px; 
+    font-size: 1em;
     z-index: -1;
-    /* background-image:linear-gradient(to right, #fe8c00 95%, #f83600 5%) !important; */
+     /*background-image:linear-gradient(to right, #fe8c00 , #f83600 5%) !important;*/
+     padding-top: 25px;
+    
 }
 .mycard{
     padding: 0;
     margin: 0.5em 0;
+    
+}
+.card-header{
+    background-color: #45a29e;
 }
 .chartcard{
     margin: 0.5em 0;
 }
-.mycontainer{
-    height: auto;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin-top:76px;
-    margin-left: 225px;  
-}
+
 .card a{
     color: #212529;
 }
@@ -46,8 +42,4 @@ aside{
 }
 .card a:link {
     text-decoration: none;
-}
-footer{ 
-    background-image: linear-gradient(to right, #fe8c00, #f83600) !important;
-    z-index: 100;
 }

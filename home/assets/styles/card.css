@@ -1,0 +1,36 @@
+body {
+    overflow-x: hidden;
+}
+
+aside {
+    display: inline-block;
+    float: left;
+}
+.card{
+    padding: 0.5em;
+    overflow: auto;
+}
+.mycard{
+    padding: 0;
+    margin: 0.5em 0;
+}
+.userinfo {
+padding-top: 25px;
+background-color: rgba(253, 219, 27, 0.288);
+}
+.card-header{
+background-color: #45a29e;
+}
+
+.card a{
+    color: #212529;
+}
+.card ul li{
+    list-style-type: none;
+}
+.card a:hover{
+    color: blue;
+}
+.card a:link {
+    text-decoration: none;
+}
